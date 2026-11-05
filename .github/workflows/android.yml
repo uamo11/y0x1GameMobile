@@ -61,7 +61,7 @@ jobs:
         env:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
-          ./vcpkg/vcpkg install @vcpkg_android.txt --triplet arm64-android
+          ./vcpkg/vcpkg install @vcpkg_android.txt --triplet arm64-android --recurse
 
       - name: Prepare Game Assets
         run: |
