@@ -970,7 +970,13 @@ namespace spades {
 				case RGB16F: return GL_RGB16F;
 				case RGBA16F: return GL_RGBA16F;
 				case R16F: return GL_R16F;
+#ifdef GL_RGB5
 				case RGB5: return GL_RGB5;
+#elif defined(GL_RGB565)
+				case RGB5: return GL_RGB565;
+#else
+				case RGB5: return GL_RGB;
+#endif
 				case RGB5A1: return GL_RGB5_A1;
 				case RGB8: return GL_RGB8;
 				case RGBA8: return GL_RGBA8;
@@ -1005,7 +1011,11 @@ namespace spades {
 				case UnsignedByte: return GL_UNSIGNED_BYTE;
 				case FloatType: return GL_FLOAT;
 				case UnsignedShort5551: return GL_UNSIGNED_SHORT_5_5_5_1;
+#ifdef GL_UNSIGNED_SHORT_1_5_5_5_REV
 				case UnsignedShort1555Rev: return GL_UNSIGNED_SHORT_1_5_5_5_REV;
+#else
+				case UnsignedShort1555Rev: return GL_UNSIGNED_SHORT_5_5_5_1;
+#endif
 				case UnsignedInt2101010Rev: return GL_UNSIGNED_INT_2_10_10_10_REV;
 				case UnsignedInt248: return GL_UNSIGNED_INT_24_8;
 				default: SPInvalidEnum("v", v);
@@ -1339,8 +1349,12 @@ namespace spades {
 		}
 
 		void SDLGLDevice::VertexAttribDivisor(UInteger index, UInteger divisor) {
+#if defined(__ANDROID__) || defined(ANDROID) || defined(__APPLE__)
+			glVertexAttribDivisor(index, divisor);
+#else
 			CheckExistence(glVertexAttribDivisorARB);
 			glVertexAttribDivisorARB(index, divisor);
+#endif
 			CheckError();
 		}
 
@@ -2016,11 +2030,20 @@ namespace spades {
 				case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: return FramebufferIncompleteAttachment;
 				case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 					return FramebufferIncompleteMissingAttachment;
+#ifdef GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
 				case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: return FramebufferIncompleteDrawBuffer;
+#endif
+#ifdef GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER
 				case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: return FramebufferIncompleteReadBuffer;
+#endif
 				case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: return FramebufferIncompleteMultisample;
+#ifdef GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS
 				case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
 					return FramebufferIncompleteLayerTargets;
+#elif defined(GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT)
+				case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS_EXT:
+					return FramebufferIncompleteLayerTargets;
+#endif
 				default: return FramebufferUnsupported;
 			}
 		}

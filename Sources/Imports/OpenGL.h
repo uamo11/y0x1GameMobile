@@ -36,6 +36,16 @@
 #    define GL_BGRA 0x80E1
 #  endif
 #endif
+#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
+#  define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
+#endif
+#ifndef GL_GEOMETRY_SHADER
+#  ifdef GL_GEOMETRY_SHADER_EXT
+#    define GL_GEOMETRY_SHADER GL_GEOMETRY_SHADER_EXT
+#  else
+#    define GL_GEOMETRY_SHADER 0x8DD9
+#  endif
+#endif
 #define glClearDepth glClearDepthf
 #define glDepthRange glDepthRangef
 #else
