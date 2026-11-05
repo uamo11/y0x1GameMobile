@@ -75,9 +75,19 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
+          SUCCESS=0
           for i in 1 2 3; do
-            ./gradlew assembleDebug --stacktrace && break || (echo "Gradle attempt $i failed, retrying in 5s..." && sleep 5)
+            if ./gradlew assembleDebug --stacktrace; then
+              SUCCESS=1
+              break
+            fi
+            echo "Gradle attempt $i failed, retrying in 5s..."
+            sleep 5
           done
+          if [ $SUCCESS -ne 1 ]; then
+            echo "Gradle build failed after 3 attempts"
+            exit 1
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4

@@ -121,12 +121,12 @@ namespace spades {
 		}
 
 		void TouchHUD::Draw(IRenderer& r, Client& client) {
-			if (!cg_touchHUD)
+			if (!cg_touchHUD || !client.fontManager)
 				return;
 
 			float op = Clamp(static_cast<float>(cg_touchOpacity), 0.1F, 1.0F);
-			IFont& font = client.GetFontManager().GetGuiFont();
-			IFont& smallFont = client.GetFontManager().GetSmallFont();
+			IFont& font = client.fontManager->GetGuiFont();
+			IFont& smallFont = client.fontManager->GetSmallFont();
 
 			Vector4 baseCol = MakeVector4(0.12F, 0.15F, 0.22F, op * 0.6F);
 			Vector4 knobCol = MakeVector4(0.35F, 0.55F, 0.85F, op * 0.9F);
