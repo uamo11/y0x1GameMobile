@@ -85,23 +85,29 @@ public class ySpadesActivity extends SDLActivity {
     @Override
     protected String[] getLibraries() {
         return new String[] {
-            "ZeroSpades"
+            "c++_shared",
+            "zerospades"
         };
     }
 
     @Override
+    protected String getMainSharedObject() {
+        return getContext().getApplicationInfo().nativeLibraryDir + "/libzerospades.so";
+    }
+
+    @Override
     public void loadLibraries() {
-        String[] libs = new String[] { "SDL2", "SDL2_image", "OpenAL", "ZeroSpades" };
+        String[] libs = new String[] { "c++_shared", "zerospades" };
         for (String lib : libs) {
             try {
                 System.loadLibrary(lib);
                 Log.i(TAG, "Loaded native library: " + lib);
             } catch (UnsatisfiedLinkError e) {
-                if ("ZeroSpades".equals(lib)) {
-                    Log.e(TAG, "Failed to load ZeroSpades: ", e);
-                    throw e;
+                if ("c++_shared".equals(lib)) {
+                    Log.i(TAG, "Optional library " + lib + " not found or already loaded");
                 } else {
-                    Log.i(TAG, "Optional library " + lib + " not found (statically linked)");
+                    Log.e(TAG, "Failed to load " + lib + ": ", e);
+                    throw e;
                 }
             }
         }

@@ -10,4 +10,8 @@
 
 #include <SDL.h>
 #include <SDL_image.h>
+#if defined(__ANDROID__) || defined(ANDROID)
+#include <SDL_system.h>
+#endif
+
 

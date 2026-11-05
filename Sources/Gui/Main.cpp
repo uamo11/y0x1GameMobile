@@ -715,15 +715,22 @@ int main(int argc, char** argv) {
 		spades::FileManager::AddFileSystem(
 		  new spades::DirectoryFileSystem(spades::g_userResourceDirectory, true));
 #elif defined(__ANDROID__) || defined(ANDROID)
+		const char* internalPath = SDL_AndroidGetInternalStoragePath();
+		std::string internalDir = internalPath ? internalPath : "/data/data/org.yspades/files";
+		if (internalDir.empty() || internalDir.back() != '/') internalDir += '/';
+
 		char* prefPath = SDL_GetPrefPath("uamo11", "ySpades");
-		std::string appDir = prefPath ? prefPath : "/data/data/org.yspades/files/";
+		std::string appDir = prefPath ? prefPath : internalDir;
 		if (prefPath) SDL_free(prefPath);
 
-		spades::g_userResourceDirectory = appDir + "Resources";
+		spades::g_userResourceDirectory = internalDir + "Resources";
 		spades::FileManager::AddFileSystem(
 		  new spades::DirectoryFileSystem(spades::g_userResourceDirectory, true));
+		spades::FileManager::AddFileSystem(
+		  new spades::DirectoryFileSystem(appDir + "Resources", false));
 		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem("./Resources", false));
 		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem(appDir, false));
+		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem(internalDir, false));
 #else
 		const char* homeEnv = getenv("HOME");
 		std::string home = homeEnv ? homeEnv : ".";
