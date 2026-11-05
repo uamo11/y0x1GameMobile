@@ -70,6 +70,27 @@ if(POLICY CMP0072)
 endif()
 
 if(USE_VCPKG)
+	find_package(BZip2 QUIET)
+	if(NOT BZip2_FOUND)
+		find_package(BZip2 REQUIRED)
+	endif()
+
+	find_package(PNG QUIET)
+	if(NOT PNG_FOUND)
+		find_package(PNG REQUIRED)
+	endif()
+
+	find_package(ZLIB QUIET)
+	if(NOT ZLIB_FOUND)
+		find_package(ZLIB REQUIRED)
+	endif()
+
+	find_package(unofficial-brotli CONFIG QUIET)
+	if(TARGET unofficial::brotli::brotlidec AND NOT TARGET Brotli::brotlidec)
+		add_library(Brotli::brotlidec ALIAS unofficial::brotli::brotlidec)
+		add_library(Brotli::brotlicommon ALIAS unofficial::brotli::brotlicommon)
+	endif()
+
 	find_package(Ogg CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/ogg" "${_VCPKG_TRIPLET_DIR}/share/libogg" "${_VCPKG_TRIPLET_DIR}")
 	if(NOT Ogg_FOUND)
 		find_package(Ogg CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/ogg" "${_VCPKG_TRIPLET_DIR}/share/libogg" "${_VCPKG_TRIPLET_DIR}")

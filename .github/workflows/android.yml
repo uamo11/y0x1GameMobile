@@ -45,9 +45,10 @@ jobs:
 
       - name: Ensure submodules (vcpkg & openal-soft)
         run: |
-          if [ ! -f "openal-soft/CMakeLists.txt" ]; then
-            git clone --depth 1 https://github.com/kcat/openal-soft.git openal-soft
+          if [ -d "openal-soft" ]; then
+            rm -rf openal-soft
           fi
+          git clone --depth 1 --branch 1.23.1 https://github.com/kcat/openal-soft.git openal-soft
           if [ ! -f "vcpkg/bootstrap-vcpkg.sh" ]; then
             git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
           fi
