@@ -437,6 +437,11 @@ namespace spades {
 
 		void GLWaterRenderer::PreloadShaders(GLRenderer& renderer) {
 			auto& settings = renderer.GetSettings();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if ((int)settings.r_water >= 2) {
+				settings.r_water = 1;
+			}
+#endif
 			if ((int)settings.r_water >= 3)
 				renderer.RegisterProgram("Shaders/OpenGL/Water3.program");
 			else if ((int)settings.r_water >= 2)
@@ -451,6 +456,11 @@ namespace spades {
 		      settings(renderer.GetSettings()),
 		      map(map) {
 			SPADES_MARK_FUNCTION();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if ((int)settings.r_water >= 2) {
+				settings.r_water = 1;
+			}
+#endif
 			if ((int)settings.r_water >= 3)
 				program = renderer.RegisterProgram("Shaders/OpenGL/Water3.program");
 			else if ((int)settings.r_water >= 2)
