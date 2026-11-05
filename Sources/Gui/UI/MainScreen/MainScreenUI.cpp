@@ -61,6 +61,7 @@ DEFINE_SPADES_SETTING(cg_countryIsSet, "0");
 SPADES_SETTING(cg_playerSkin);
 SPADES_SETTING(cg_playerCape);
 SPADES_SETTING(cg_playerAccessory);
+SPADES_SETTING(cg_wallpaperStyle);
 
 namespace spades {
 	namespace gui {
@@ -608,6 +609,20 @@ namespace spades {
 			if (fade < 1.0F) {
 				ui::SetColorNP(*renderer, MakeVector4(0.0F, 0.0F, 0.0F, 1.0F - fade));
 				renderer->DrawImage(nullptr, AABB2(0.0F, 0.0F, sw, sh));
+			}
+
+			// draw Kyro wallpaper if enabled
+			if (cg_wallpaperStyle == 1) {
+				try {
+					Handle<client::IImage> wp = renderer->RegisterImage("Gfx/Wallpapers/the canyon.png");
+					if (wp) {
+						ui::SetColorNP(*renderer, MakeVector4(1.0F, 1.0F, 1.0F, 1.0F));
+						renderer->DrawImage(wp, AABB2(0.0F, 0.0F, sw, sh));
+						// semi-transparent dark overlay for UI readability
+						ui::SetColorNP(*renderer, MakeVector4(0.0F, 0.0F, 0.0F, 0.30F));
+						renderer->DrawImage(nullptr, AABB2(0.0F, 0.0F, sw, sh));
+					}
+				} catch (...) {}
 			}
 
 			// draw title logo

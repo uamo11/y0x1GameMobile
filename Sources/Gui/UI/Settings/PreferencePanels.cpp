@@ -198,6 +198,14 @@ namespace spades {
 			l.AddHelp(_Tr("Preferences",
 				"Uses the original `AoS 0.75` first-person weapon positions and "
 				"animations instead of the new ones."));
+			l.AddChoiceField(_Tr("Preferences", "Weapon Pack"), "cg_weaponSet",
+			                 {_Tr("Preferences", "OpenSpades Classic"), _Tr("Preferences", "KyroSpades")},
+			                 {"0", "1"});
+			l.AddHelp(_Tr("Preferences",
+				"Choose between classic OpenSpades weapons and KyroSpades custom weapons."));
+			l.AddChoiceField(_Tr("Preferences", "Lobby Background"), "cg_wallpaperStyle",
+			                 {_Tr("Preferences", "3D Map"), _Tr("Preferences", "Kyro Artwork")},
+			                 {"0", "1"});
 
 			l.AddHeading(_Tr("Preferences", "Misc"));
 			l.AddSliderField(_Tr("Preferences", "Field of View"), "cg_fov", 45, 110, 1,

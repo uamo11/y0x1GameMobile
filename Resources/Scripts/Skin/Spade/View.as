@@ -53,12 +53,18 @@
 		protected ConfigItem cg_viewWeaponY("cg_viewWeaponY");
 		protected ConfigItem cg_viewWeaponZ("cg_viewWeaponZ");
 		protected ConfigItem cg_viewWeaponSide("cg_viewWeaponSide");
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ViewSpadeSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@spadeModel	= renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
-			@pickaxeModel = renderer.RegisterModel("Models/Weapons/Spade/Pickaxe.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@spadeModel = renderer.RegisterModel("Models/Weapons/Kyro/spade(Crowbar).kv6");
+				@pickaxeModel = renderer.RegisterModel("Models/Weapons/Kyro/spade(Crowbar).kv6");
+			} else {
+				@spadeModel = renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
+				@pickaxeModel = renderer.RegisterModel("Models/Weapons/Spade/Pickaxe.kv6");
+			}
 			@model = @spadeModel;
 			@sightImage = renderer.RegisterImage("Gfx/Sight.tga");
 		}

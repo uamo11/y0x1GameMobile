@@ -189,12 +189,21 @@ namespace spades {
 			@audioDevice = dev;
 
 			// load models
-			@gunModel = renderer.RegisterModel("Models/Weapons/SMG/WeaponNoMagazine.kv6");
-			@magazineModel = renderer.RegisterModel("Models/Weapons/SMG/Magazine.kv6");
-			@rearSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightRear.kv6");
-			@frontSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightFront.kv6");
-			@frontPinSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightFrontPin.kv6");
-			@reflexSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightReflex.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@gunModel = renderer.RegisterModel("Models/Weapons/Kyro/smg.kv6");
+				@magazineModel = null;
+				@rearSightModel = null;
+				@frontSightModel = null;
+				@frontPinSightModel = null;
+				@reflexSightModel = null;
+			} else {
+				@gunModel = renderer.RegisterModel("Models/Weapons/SMG/WeaponNoMagazine.kv6");
+				@magazineModel = renderer.RegisterModel("Models/Weapons/SMG/Magazine.kv6");
+				@rearSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightRear.kv6");
+				@frontSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightFront.kv6");
+				@frontPinSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightFrontPin.kv6");
+				@reflexSightModel = renderer.RegisterModel("Models/Weapons/SMG/SightReflex.kv6");
+			}
 
 			// load sounds
 			@fireSounds[0] = dev.RegisterSound("Sounds/Weapons/SMG/V2Local1.opus");
@@ -416,32 +425,38 @@ namespace spades {
 			renderer.AddModel(gunModel, param);
 
 			// draw magazine
-			param.matrix = weapMatrix
-				* CreateTranslateMatrix(GetMagazineOffset());
-			renderer.AddModel(magazineModel, param);
+			if (@magazineModel != null) {
+				param.matrix = weapMatrix
+					* CreateTranslateMatrix(GetMagazineOffset());
+				renderer.AddModel(magazineModel, param);
+			}
 
 			// draw sights
-			if (cg_reflexScope.BoolValue) {
+			if (cg_reflexScope.BoolValue and @reflexSightModel != null) {
 				param.matrix = weapMatrix
 					* CreateTranslateMatrix(reflexSightAttachment)
 					* CreateScaleMatrix(reflexSightScale);
 				renderer.AddModel(reflexSightModel, param); // reflex
-			} else {
+			} else if (@rearSightModel != null) {
 				param.matrix = weapMatrix
 					* CreateTranslateMatrix(rearSightAttachment)
 					* CreateScaleMatrix(rearSightScale);
 				renderer.AddModel(rearSightModel, param); // rear
 			}
 
-			param.matrix = weapMatrix
-				* CreateTranslateMatrix(frontPinSightAttachment)
-				* CreateScaleMatrix(frontPinSightScale);
-			renderer.AddModel(frontPinSightModel, param); // front pin (emissive)
+			if (@frontPinSightModel != null) {
+				param.matrix = weapMatrix
+					* CreateTranslateMatrix(frontPinSightAttachment)
+					* CreateScaleMatrix(frontPinSightScale);
+				renderer.AddModel(frontPinSightModel, param); // front pin (emissive)
+			}
 
-			param.matrix = weapMatrix
-				* CreateTranslateMatrix(frontSightAttachment)
-				* CreateScaleMatrix(frontSightScale);
-			renderer.AddModel(frontSightModel, param); // front
+			if (@frontSightModel != null) {
+				param.matrix = weapMatrix
+					* CreateTranslateMatrix(frontSightAttachment)
+					* CreateScaleMatrix(frontSightScale);
+				renderer.AddModel(frontSightModel, param); // front
+			}
 
 			// draw charms
 			if (cg_weaponCharms.BoolValue) {

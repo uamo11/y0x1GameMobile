@@ -51,11 +51,16 @@
 		protected ConfigItem cg_viewWeaponY("cg_viewWeaponY");
 		protected ConfigItem cg_viewWeaponZ("cg_viewWeaponZ");
 		protected ConfigItem cg_viewWeaponSide("cg_viewWeaponSide");
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ViewGrenadeSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@model = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@model = renderer.RegisterModel("Models/Weapons/Kyro/grenade(Poke Ball).kv6");
+			} else {
+				@model = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+			}
 			@sightImage = renderer.RegisterImage("Gfx/Sight.tga");
 		}
 

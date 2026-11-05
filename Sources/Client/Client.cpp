@@ -643,6 +643,15 @@ namespace spades {
 			renderer->RegisterModel("Models/Weapons/Charms/Charm.kv6");
 			renderer->RegisterModel("Models/Weapons/Charms/CharmBase.kv6");
 
+			// KyroSpades weapons
+			renderer->RegisterModel("Models/Weapons/Kyro/semi.kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/semi(Kar-98K).kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/smg.kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/smg(SCAR-H).kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/shotgun(SPAS-12).kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/spade(Crowbar).kv6");
+			renderer->RegisterModel("Models/Weapons/Kyro/grenade(Poke Ball).kv6");
+
 			// detect seasonal events & load assets
 			time_t t;
 			struct tm tm;

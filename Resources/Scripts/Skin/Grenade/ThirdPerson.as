@@ -38,11 +38,16 @@
 		private Renderer@ renderer;
 		private AudioDevice@ audioDevice;
 		private Model@ model;
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ThirdPersonGrenadeSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@model = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@model = renderer.RegisterModel("Models/Weapons/Kyro/grenade(Poke Ball).kv6");
+			} else {
+				@model = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+			}
 		}
 
 		void Update(float dt) {}

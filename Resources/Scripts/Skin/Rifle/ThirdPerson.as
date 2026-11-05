@@ -66,11 +66,16 @@ namespace spades {
 		private AudioChunk@ fireSmallReverbSound;
 		private AudioChunk@ fireLargeReverbSound;
 		private AudioChunk@ reloadSound;
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ThirdPersonRifleSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@model = renderer.RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@model = renderer.RegisterModel("Models/Weapons/Kyro/semi.kv6");
+			} else {
+				@model = renderer.RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
+			}
 			@fireSounds[0] = dev.RegisterSound("Sounds/Weapons/Rifle/Fire1.opus");
 			@fireSounds[1] = dev.RegisterSound("Sounds/Weapons/Rifle/Fire2.opus");
 			@fireSounds[2] = dev.RegisterSound("Sounds/Weapons/Rifle/Fire3.opus");

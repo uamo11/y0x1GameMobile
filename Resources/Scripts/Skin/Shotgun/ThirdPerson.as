@@ -67,11 +67,16 @@ namespace spades {
 		private AudioChunk@ fireLargeReverbSound;
 		private AudioChunk@ reloadSound;
 		private AudioChunk@ cockSound;
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ThirdPersonShotgunSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@model = renderer.RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@model = renderer.RegisterModel("Models/Weapons/Kyro/shotgun(SPAS-12).kv6");
+			} else {
+				@model = renderer.RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
+			}
 			@fireSound = dev.RegisterSound("Sounds/Weapons/Shotgun/Fire.opus");
 			@fireFarSound = dev.RegisterSound("Sounds/Weapons/Shotgun/FireFar.opus");
 			@fireStereoSound = dev.RegisterSound("Sounds/Weapons/Shotgun/FireStereo.opus");

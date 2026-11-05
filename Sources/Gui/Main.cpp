@@ -630,11 +630,16 @@ int main(int argc, char** argv) {
 		spades::reflection::Backtrace::StartBacktrace();
 		SPADES_MARK_FUNCTION();
 
+#ifndef __ANDROID__
 		// show splash window
 		// NOTE: splash window uses image loader, which assumes backtrace is already initialized.
 		splashWindow.reset(new spades::SplashWindow());
 		auto showSplashWindowTime = SDL_GetTicks();
-		auto pumpEvents = [&splashWindow] { splashWindow->PumpEvents(); };
+		auto pumpEvents = [&splashWindow] { if (splashWindow) splashWindow->PumpEvents(); else SDL_PumpEvents(); };
+#else
+		Uint32 showSplashWindowTime = SDL_GetTicks();
+		auto pumpEvents = [] { SDL_PumpEvents(); };
+#endif
 
 		// initialize threads
 		spades::Thread::InitThreadSystem();
@@ -1020,7 +1025,7 @@ int main(int argc, char** argv) {
 		// we want to show splash window at least for some time...
 		pumpEvents();
 		auto ticks = SDL_GetTicks();
-		if (ticks < showSplashWindowTime + 1500)
+		if (splashWindow && ticks < showSplashWindowTime + 1500)
 			SDL_Delay(showSplashWindowTime + 1500 - ticks);
 		pumpEvents();
 

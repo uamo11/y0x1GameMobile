@@ -40,12 +40,18 @@
 		private Model@ spadeModel;
 		private Model@ pickaxeModel;
 		private Model@ model;
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		ThirdPersonSpadeSkin(Renderer@ r, AudioDevice@ dev) {
 			@renderer = r;
 			@audioDevice = dev;
-			@spadeModel	= renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
-			@pickaxeModel = renderer.RegisterModel("Models/Weapons/Spade/Pickaxe.kv6");
+			if (cg_weaponSet.IntValue == 1) {
+				@spadeModel = renderer.RegisterModel("Models/Weapons/Kyro/spade(Crowbar).kv6");
+				@pickaxeModel = renderer.RegisterModel("Models/Weapons/Kyro/spade(Crowbar).kv6");
+			} else {
+				@spadeModel = renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
+				@pickaxeModel = renderer.RegisterModel("Models/Weapons/Spade/Pickaxe.kv6");
+			}
 			@model = @spadeModel;
 		}
 

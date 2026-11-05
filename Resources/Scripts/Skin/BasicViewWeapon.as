@@ -210,6 +210,7 @@ namespace spades {
 		protected ConfigItem cg_reflexScope("cg_reflexScope", "0");
 		protected ConfigItem cg_trueAimDownSight("cg_trueAimDownSight");
 		protected ConfigItem cg_weaponCharms("cg_weaponCharms", "1");
+		protected ConfigItem cg_weaponSet("cg_weaponSet", "0");
 
 		protected ConfigItem cg_viewWeaponX("cg_viewWeaponX");
 		protected ConfigItem cg_viewWeaponY("cg_viewWeaponY");

@@ -102,10 +102,7 @@ namespace spades {
 
 		SDL_Surface* LoadSdlImage(const std::string& data) override {
 			StringSdlRWops ops(data);
-			int flags = IMG_INIT_PNG | IMG_INIT_JPG;
-			int initted = IMG_Init(flags);
-			if ((initted & flags) != flags)
-				SPRaise("IMG_Init failed: %s", IMG_GetError());
+			IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
 			auto* s = IMG_Load_RW(ops, 0);
 			if (s == nullptr)
 				SPRaise("IMG_Load_RW failed: %s", IMG_GetError());

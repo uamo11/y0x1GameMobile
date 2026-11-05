@@ -52,6 +52,8 @@
 #undef interface
 
 SPADES_SETTING(cg_ragdoll);
+DEFINE_SPADES_SETTING(cg_weaponSet, "0");
+DEFINE_SPADES_SETTING(cg_wallpaperStyle, "1");
 DEFINE_SPADES_SETTING(cg_animations, "1");
 SPADES_SETTING(cg_shake);
 SPADES_SETTING(r_hdr);
@@ -822,7 +824,7 @@ namespace spades {
 
 				switch (currentTool) {
 					case Player::ToolSpade: {
-						model = renderer.RegisterModel("Models/Weapons/Spade/Spade.kv6");
+						model = renderer.RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/spade(Crowbar).kv6" : "Models/Weapons/Spade/Spade.kv6");
 
 						const float nextSpadeTime = p.GetTimeToNextSpade();
 						const float nextDigTime = p.GetTimeToNextDig();
@@ -866,7 +868,7 @@ namespace spades {
 						}
 					} break;
 					case Player::ToolGrenade: {
-						model = renderer.RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+						model = renderer.RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/grenade(Poke Ball).kv6" : "Models/Weapons/Grenade/Grenade.kv6");
 
 						const float nextGrenadeTime = p.GetTimeToNextGrenade();
 						const float cookGrenadeTime = p.GetGrenadeCookTime();
@@ -888,13 +890,13 @@ namespace spades {
 
 						switch (w.GetWeaponType()) {
 							case RIFLE_WEAPON:
-								model = renderer.RegisterModel("Models/Weapons/Rifle/Weapon.kv6");
+								model = renderer.RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/semi.kv6" : "Models/Weapons/Rifle/Weapon.kv6");
 								break;
 							case SMG_WEAPON:
-								model = renderer.RegisterModel("Models/Weapons/SMG/Weapon.kv6");
+								model = renderer.RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/smg.kv6" : "Models/Weapons/SMG/Weapon.kv6");
 								break;
 							case SHOTGUN_WEAPON:
-								model = renderer.RegisterModel("Models/Weapons/Shotgun/Weapon.kv6");
+								model = renderer.RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/shotgun(SPAS-12).kv6" : "Models/Weapons/Shotgun/Weapon.kv6");
 								break;
 						}
 

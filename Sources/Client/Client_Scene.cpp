@@ -64,6 +64,7 @@ SPADES_SETTING(cg_spadeDigPreview);
 SPADES_SETTING(cg_spadeDigPreviewRed);
 SPADES_SETTING(cg_autoBridge3);
 SPADES_SETTING(cg_autoBridge3Preview);
+SPADES_SETTING(cg_weaponSet);
 
 namespace spades {
 	namespace client {
@@ -598,7 +599,7 @@ namespace spades {
 			if (g.GetPosition().z > 63.0F)
 				return; // work-around for water refraction problem
 
-			Handle<IModel> model = renderer->RegisterModel("Models/Weapons/Grenade/Grenade.kv6");
+			Handle<IModel> model = renderer->RegisterModel(cg_weaponSet == 1 ? "Models/Weapons/Kyro/grenade(Poke Ball).kv6" : "Models/Weapons/Grenade/Grenade.kv6");
 
 			// Move the grenade slightly so that it doesn't look like sinking in the ground
 			Vector3 position = g.GetPosition();

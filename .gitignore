@@ -3,6 +3,7 @@
 
 # paks
 *.pak
+build_apk*
 DevPaks*.zip
 OpenSpadesDevPackage-*.zip
 
