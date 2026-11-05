@@ -117,21 +117,57 @@ namespace spades {
 			int spawnX = 256;
 			int spawnY = 256;
 			int spawnZ = 32;
-			for (int z = 1; z < 62; z++) {
-				if (map->IsSolid(spawnX, spawnY, z)) {
-					spawnZ = z - 2;
-					break;
+			bool foundGround = false;
+
+			// Spiral search outward from center to find solid ground above water
+			for (int r = 0; r <= 240 && !foundGround; r += 16) {
+				for (int dx = -r; dx <= r && !foundGround; dx += 16) {
+					for (int dy = -r; dy <= r && !foundGround; dy += 16) {
+						int cx = std::clamp(256 + dx, 16, 496);
+						int cy = std::clamp(256 + dy, 16, 496);
+						int topZ = map->GetTop(cx, cy);
+						if (topZ > 2 && topZ < 62) {
+							spawnX = cx;
+							spawnY = cy;
+							spawnZ = topZ - 2;
+							foundGround = true;
+							break;
+						}
+					}
 				}
 			}
-			if (spawnZ < 2)
-				spawnZ = 20;
+
+			if (!foundGround) {
+				spawnX = 100;
+				spawnY = 256;
+				int topZ = map->GetTop(spawnX, spawnY);
+				spawnZ = (topZ > 2 && topZ < 62) ? topZ - 2 : 30;
+			}
 
 			Vector3 pos = MakeVector3(static_cast<float>(spawnX) + 0.5F,
 			                          static_cast<float>(spawnY) + 0.5F,
-			                          static_cast<float>(spawnZ));
+			                          static_cast<float>(spawnZ) - 0.4F);
 
 			auto p = stmp::make_unique<Player>(*w, pId, RIFLE_WEAPON, 0);
 			p->SetPosition(pos);
+
+			// Face towards the center of the map horizontally
+			Vector3 lookDir = MakeVector3(256.0F - static_cast<float>(spawnX),
+			                              256.0F - static_cast<float>(spawnY),
+			                              0.0F);
+			if (lookDir.GetSquaredLength2D() < 1.0F)
+				lookDir = MakeVector3(1.0F, 0.0F, 0.0F);
+			else
+				lookDir = lookDir.Normalize();
+			p->SetOrientation(lookDir);
+
+			// Default block color for local building
+			p->SetHeldBlockColor(MakeIntVector3(255, 255, 255));
+
+			// Atmospheric sky and fog color (bright daytime tropical blue)
+			w->SetFogColor(MakeIntVector3(140, 195, 245));
+
+			Player& pRef = *p;
 			w->SetPlayer(pId, std::move(p));
 
 			std::string pName = StripNewlines(cg_playerName.operator std::string());
@@ -140,6 +176,8 @@ namespace spades {
 			w->GetPlayerPersistent(pId).name = pName;
 
 			client->LocalPlayerCreated();
+			client->PlayerJoinedTeam(pRef);
+			client->PlayerSpawned(pRef);
 
 			status = NetClientStatusConnected;
 			statusString = "Conectado al mundo local";

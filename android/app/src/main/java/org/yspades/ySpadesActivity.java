@@ -18,6 +18,7 @@ public class ySpadesActivity extends SDLActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         extractAssetsIfNeeded();
         super.onCreate(savedInstanceState);
     }
