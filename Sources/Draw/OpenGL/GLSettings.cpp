@@ -94,7 +94,7 @@ DEFINE_SPADES_SETTING(r_srgb2D, "1");
 DEFINE_SPADES_SETTING(r_ssao, "0");
 DEFINE_SPADES_SETTING(r_temporalAA, "0");
 #if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
-DEFINE_SPADES_SETTING(r_water, "1");
+DEFINE_SPADES_SETTING(r_water, "0");
 #else
 DEFINE_SPADES_SETTING(r_water, "2");
 #endif

@@ -652,7 +652,7 @@ namespace spades {
 
 			const client::SceneDefinition& def = renderer.GetSceneDef();
 			float waterLevel = 63.0F;
-			float waterRange = 128.0F;
+			float waterRange = 220.0F;
 
 			Matrix4 mat = Matrix4::Translate(def.viewOrigin.x, def.viewOrigin.y, waterLevel);
 			mat = mat * Matrix4::Scale(waterRange, waterRange, 1.0F);

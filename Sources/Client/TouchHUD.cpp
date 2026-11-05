@@ -177,17 +177,17 @@ namespace spades {
 
 			// Top Buttons: Menu (ESC) & HKS Menu (Insert)
 			escButton.key = "Escape";
-			escButton.label = "MENU";
-			escButton.pos = MakeVector2(54.0F, 34.0F);
-			escButton.width = 76.0F;
+			escButton.label = "PAUSA";
+			escButton.pos = MakeVector2(75.0F, 42.0F);
+			escButton.width = 90.0F;
 			escButton.height = 36.0F;
 			escButton.radius = 28.0F;
 			escButton.isRect = true;
 
 			hksButton.key = "Insert";
-			hksButton.label = "HKS";
-			hksButton.pos = MakeVector2(sw * 0.5F, 34.0F);
-			hksButton.width = 68.0F;
+			hksButton.label = "MODS (Insert)";
+			hksButton.pos = MakeVector2(215.0F, 42.0F);
+			hksButton.width = 150.0F;
 			hksButton.height = 36.0F;
 			hksButton.radius = 24.0F;
 			hksButton.isRect = true;
@@ -437,19 +437,19 @@ namespace spades {
 
 			// 8. Draw Menu & HKS Buttons
 			{
-				// MENU
+				// PAUSA
 				DrawGlassCard(r, escButton.pos.x, escButton.pos.y, escButton.width, escButton.height,
 				              escButton.active, false, MakeVector4(0.95F, 0.35F, 0.35F, 1.0F), op);
-				Vector2 mSz = smallFont.Measure("MENU");
-				smallFont.DrawShadow("MENU", escButton.pos - mSz * 0.5F, 0.80F,
+				Vector2 mSz = smallFont.Measure(escButton.label);
+				smallFont.DrawShadow(escButton.label, escButton.pos - mSz * 0.5F, 0.78F,
 				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
 
-				// HKS
+				// MODS (Insert)
 				DrawGlassCard(r, hksButton.pos.x, hksButton.pos.y, hksButton.width, hksButton.height,
-				              hksButton.active, false, MakeVector4(0.75F, 0.35F, 1.0F, 1.0F), op);
-				Vector2 hSz = smallFont.Measure("HKS");
-				smallFont.DrawShadow("HKS", hksButton.pos - hSz * 0.5F, 0.80F,
-				                     MakeVector4(0.9F, 0.65F, 1.0F, op), MakeVector4(0, 0, 0, op * 0.8F));
+				              hksButton.active, false, MakeVector4(1.0F, 0.75F, 0.20F, 1.0F), op);
+				Vector2 hSz = smallFont.Measure(hksButton.label);
+				smallFont.DrawShadow(hksButton.label, hksButton.pos - hSz * 0.5F, 0.78F,
+				                     MakeVector4(1.0F, 0.90F, 0.40F, op), MakeVector4(0, 0, 0, op * 0.8F));
 			}
 		}
 

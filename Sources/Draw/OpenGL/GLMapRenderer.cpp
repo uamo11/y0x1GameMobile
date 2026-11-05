@@ -116,10 +116,12 @@ namespace spades {
 			}
 		}
 
+		static const int MapMaxDrawDist = 192;
+
 		void GLMapRenderer::RealizeChunks(spades::Vector3 eye) {
 			SPADES_MARK_FUNCTION();
 
-			float cullDistance = 128.0F;
+			float cullDistance = static_cast<float>(MapMaxDrawDist);
 			float releaseDistance = cullDistance + 32.0F;
 			for (int i = 0; i < numChunks; i++) {
 				float dist = chunks[i]->DistanceFromEye(eye);
@@ -159,7 +161,7 @@ namespace spades {
 			// draw from nearest to farthest
 			IntVector3 c = viewOrigin.Floor() / GLMapChunk::Size;
 			DrawColumnDepth(c.x, c.y, c.z, viewOrigin);
-			for (int dist = 1; dist <= 128 / GLMapChunk::Size; dist++) {
+			for (int dist = 1; dist <= MapMaxDrawDist / GLMapChunk::Size; dist++) {
 				for (int x = c.x - dist; x <= c.x + dist; x++) {
 					DrawColumnDepth(x, c.y + dist, c.z, viewOrigin);
 					DrawColumnDepth(x, c.y - dist, c.z, viewOrigin);
@@ -268,7 +270,7 @@ namespace spades {
 			// draw from nearest to farthest
 			IntVector3 c = viewOrigin.Floor() / GLMapChunk::Size;
 			DrawColumnSunlight(c.x, c.y, c.z, viewOrigin);
-			for (int dist = 1; dist <= 128 / GLMapChunk::Size; dist++) {
+			for (int dist = 1; dist <= MapMaxDrawDist / GLMapChunk::Size; dist++) {
 				for (int x = c.x - dist; x <= c.x + dist; x++) {
 					DrawColumnSunlight(x, c.y + dist, c.z, viewOrigin);
 					DrawColumnSunlight(x, c.y - dist, c.z, viewOrigin);
@@ -349,7 +351,7 @@ namespace spades {
 			// TODO: optimize call
 			//	ex. don't call a chunk'r render method if
 			//  no dlight lights it
-			for (int dist = 1; dist <= 128 / GLMapChunk::Size; dist++) {
+			for (int dist = 1; dist <= MapMaxDrawDist / GLMapChunk::Size; dist++) {
 				for (int x = c.x - dist; x <= c.x + dist; x++) {
 					DrawColumnDynamicLight(x, c.y + dist, c.z, viewOrigin, lights);
 					DrawColumnDynamicLight(x, c.y - dist, c.z, viewOrigin, lights);
@@ -409,7 +411,7 @@ namespace spades {
 			// draw from nearest to farthest
 			IntVector3 c = viewOrigin.Floor() / GLMapChunk::Size;
 			DrawColumnOutline(c.x, c.y, c.z, viewOrigin);
-			for (int dist = 1; dist <= 128 / GLMapChunk::Size; dist++) {
+			for (int dist = 1; dist <= MapMaxDrawDist / GLMapChunk::Size; dist++) {
 				for (int x = c.x - dist; x <= c.x + dist; x++) {
 					DrawColumnOutline(x, c.y + dist, c.z, viewOrigin);
 					DrawColumnOutline(x, c.y - dist, c.z, viewOrigin);

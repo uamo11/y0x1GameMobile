@@ -223,7 +223,7 @@ namespace spades {
 			SceneDefinition def;
 			def.time = (unsigned int)(time * 1000.0F);
 			def.denyCameraBlur = true;
-			def.zFar = 160.0F;
+			def.zFar = 220.0F;
 
 			// Limit the range of cg_fov
 			// (note: comparsion with a NaN always results in false)
