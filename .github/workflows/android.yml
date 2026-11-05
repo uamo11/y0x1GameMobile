@@ -26,6 +26,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: 'gradle'
 
       - name: Install Android NDK & CMake
         run: |
@@ -74,7 +75,9 @@ jobs:
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          for i in 1 2 3; do
+            ./gradlew assembleDebug --stacktrace && break || (echo "Gradle attempt $i failed, retrying in 5s..." && sleep 5)
+          done
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
