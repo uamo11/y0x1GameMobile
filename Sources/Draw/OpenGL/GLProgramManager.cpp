@@ -33,6 +33,7 @@
 #include <Core/Stopwatch.h>
 #include <Core/TMPUtils.h>
 #include <sstream>
+#include <unordered_set>
 
 namespace spades {
 	namespace draw {
@@ -161,6 +162,33 @@ namespace spades {
 
 			std::string extensions;
 			std::string combinedBody;
+			std::unordered_set<std::string> declaredSymbols;
+
+			auto extractDeclName = [](const std::string& line, std::string& outName) -> bool {
+				size_t start = line.find_first_not_of(" \t\r\n");
+				if (start == std::string::npos) return false;
+				if (line.compare(start, 8, "uniform ") != 0 && line.compare(start, 8, "uniform\t") != 0 &&
+				    line.compare(start, 8, "varying ") != 0 && line.compare(start, 8, "varying\t") != 0 &&
+				    line.compare(start, 10, "attribute ") != 0 && line.compare(start, 10, "attribute\t") != 0) {
+					return false;
+				}
+				size_t semi = line.find(';', start);
+				if (semi == std::string::npos) return false;
+				std::string decl = line.substr(start, semi - start);
+				size_t bracket = decl.find('[');
+				if (bracket != std::string::npos) {
+					decl = decl.substr(0, bracket);
+				}
+				size_t lastChar = decl.find_last_not_of(" \t\r\n");
+				if (lastChar == std::string::npos) return false;
+				size_t idStart = decl.find_last_of(" \t*&", lastChar);
+				if (idStart == std::string::npos) {
+					outName = decl.substr(0, lastChar + 1);
+				} else {
+					outName = decl.substr(idStart + 1, lastChar - idStart);
+				}
+				return !outName.empty();
+			};
 
 			for (const auto& fname : fileNames) {
 				SPLog("Loading GLSL shader component '%s'", fname.c_str());
@@ -174,6 +202,13 @@ namespace spades {
 							extensions += line + "\n";
 						}
 					} else {
+						std::string declName;
+						if (extractDeclName(line, declName)) {
+							if (declaredSymbols.find(declName) != declaredSymbols.end()) {
+								continue;
+							}
+							declaredSymbols.insert(declName);
+						}
 						combinedBody += line + "\n";
 					}
 				}
