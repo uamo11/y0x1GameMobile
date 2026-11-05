@@ -98,27 +98,34 @@ namespace spades {
 #ifndef __OpenBSD__
 		if (handle == nullptr && strchr(fn, '/') == nullptr && strchr(fn, '\\') == nullptr) {
 			char* baseDir = SDL_GetBasePath();
-			std::string newPath = baseDir;
-			newPath += "/";
-			newPath += fn;
-			handle = dlopen(newPath.c_str(), RTLD_LAZY);
+			if (baseDir != nullptr) {
+				std::string newPath = baseDir;
+				newPath += "/";
+				newPath += fn;
+				handle = dlopen(newPath.c_str(), RTLD_LAZY);
+				SDL_free(baseDir);
+			}
 		}
 #endif
 		if (handle == nullptr) {
-			std::string err = dlerror();
-			SPRaise("Failed to dlload '%s': %s", fn, err.c_str());
+			const char* err = dlerror();
+			SPRaise("Failed to dlload '%s': %s", fn, err ? err : "unknown error");
 		}
 	}
 
 	DynamicLibrary::~DynamicLibrary() {
 		SPADES_MARK_FUNCTION();
 
-		dlclose(handle);
+		if (handle != nullptr) {
+			dlclose(handle);
+		}
 	}
 
 	void* DynamicLibrary::GetSymbolOrNull(const char* name) {
 		SPADES_MARK_FUNCTION();
 
+		if (handle == nullptr)
+			return nullptr;
 		void* addr = dlsym(handle, name);
 		return addr;
 	}
@@ -128,8 +135,8 @@ namespace spades {
 
 		void* v = GetSymbolOrNull(sname);
 		if (v == NULL) {
-			std::string err = dlerror();
-			SPRaise("Failed to find symbol '%s' in %s: %s", sname, name.c_str(), err.c_str());
+			const char* err = dlerror();
+			SPRaise("Failed to find symbol '%s' in %s: %s", sname, name.c_str(), err ? err : "unknown error");
 		}
 		return v;
 	}

@@ -177,6 +177,23 @@ namespace al {
 	static spades::DynamicLibrary *alLibrary = NULL;
 
 	static void *GPA(const char *str) {
+		if (qalGetProcAddress) {
+			void *v = qalGetProcAddress(str);
+			if (v)
+				return v;
+		}
+
+		if (qalcGetProcAddress) {
+			ALCcontext *pContext = qalcGetCurrentContext();
+			if (pContext) {
+				ALCdevice *pDevice = qalcGetContextsDevice(pContext);
+				void *v = qalcGetProcAddress(pDevice, str);
+				if (v)
+					return v;
+			}
+		}
+
+#ifndef OPENAL_SOFT
 		if (!alLibrary) {
 			auto paths = spades::Split(s_alDriver, ";");
 			std::string errors;
@@ -213,16 +230,16 @@ namespace al {
 			}
 		}
 
-		if (qalGetProcAddress) {
-			void *v = qalGetProcAddress(str);
-			if (v)
-				return v;
-		}
-
 		return alLibrary->GetSymbol(str);
+#else
+		return NULL;
+#endif
 	}
 
-#define L(name) *(void **)(&(q##name)) = GPA(#name)
+#define L(name) do { \
+		*(void **)(&(q##name)) = GPA(#name); \
+		if (!q##name) SPRaise("Failed to get EFX symbol: " #name); \
+	} while(0)
 
 	void InitEAX(void) {
 		ALCdevice *pDevice = NULL;
