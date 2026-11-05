@@ -586,13 +586,6 @@ namespace spades {
 			// Player blocklist / mute system
 			std::vector<std::string> blockedPlayers;
 			mutable std::mutex blockedPlayersMutex;
-			bool BlockPlayer(const std::string& nameOrSlot);
-			bool UnblockPlayer(const std::string& nameOrSlot);
-			void ClearBlockedPlayers();
-			bool IsPlayerBlocked(const std::string& name) const;
-			bool IsPlayerSlotBlocked(int slot) const;
-			std::vector<std::string> GetBlockedPlayers() const;
-			void AddLocalChatMessage(const std::string& msg);
 
 			bool staffSpectating;
 			bool spectatorPlayerNames;
@@ -783,6 +776,15 @@ namespace spades {
 
 			void SetWorld(World*);
 			World* GetWorld() const { return world.get(); }
+
+			// Player blocklist / mute system
+			bool BlockPlayer(const std::string& nameOrSlot);
+			bool UnblockPlayer(const std::string& nameOrSlot);
+			void ClearBlockedPlayers();
+			bool IsPlayerBlocked(const std::string& name) const;
+			bool IsPlayerSlotBlocked(int slot) const;
+			std::vector<std::string> GetBlockedPlayers() const;
+			void AddLocalChatMessage(const std::string& msg);
 
 			// Snapshot of all view-related state, used to preserve camera across demo seeks
 			struct ViewState {

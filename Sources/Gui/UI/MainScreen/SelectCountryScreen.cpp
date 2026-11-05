@@ -214,7 +214,7 @@ namespace spades {
 			UIManager* manager = &GetManager();
 			flagIconRenderer = Handle<FlagIconRenderer>::New(&manager->GetRenderer());
 
-			selectedCode = cg_country;
+			selectedCode = static_cast<std::string>(cg_country);
 			if (selectedCode.empty())
 				selectedCode = "US";
 
