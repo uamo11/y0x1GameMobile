@@ -62,6 +62,9 @@ namespace spades {
 			static std::vector<GLShader *> RegisterShader(GLProgramManager *, GLSettings &,
 			                                              bool variance = false,
 			                                              bool skipSSAO = false);
+			static std::vector<std::string> GetShaderNames(GLSettings &settings,
+			                                              bool variance = false,
+			                                              bool skipSSAO = false);
 
 			/** setups shadow shader.
 			 * note that this function sets the current active texture

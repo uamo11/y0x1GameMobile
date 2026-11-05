@@ -78,44 +78,69 @@ namespace spades {
 			std::string text = FileManager::ReadAllBytes(name.c_str());
 			std::vector<std::string> lines = SplitIntoLines(text);
 
-			auto p = stmp::make_unique<GLProgram>(&device, name);
+			std::vector<std::string> vsFiles;
+			std::vector<std::string> fsFiles;
+			std::vector<std::string> gsFiles;
+
+			auto addFile = [&](const std::string& file) {
+				if (file.find(".vs") != std::string::npos) {
+					vsFiles.push_back(file);
+				} else if (file.find(".fs") != std::string::npos) {
+					fsFiles.push_back(file);
+				} else if (file.find(".gs") != std::string::npos) {
+					gsFiles.push_back(file);
+				} else {
+					SPRaise("Failed to determine the type of a shader: %s", file.c_str());
+				}
+			};
 
 			for (const auto& line : lines) {
-				std::string text = TrimSpaces(line);
-				if (text.empty())
-					break; // TODO: Probably wrong, but unconfirmed
+				std::string t = TrimSpaces(line);
+				if (t.empty())
+					continue;
+				if (t[0] == '#')
+					continue;
 
-				if (text == "*shadow*") {
-					std::vector<GLShader*> shaders =
-					  GLShadowShader::RegisterShader(this, settings, false);
-					for (const auto& shader : shaders)
-						p->Attach(*shader);
-				} else if (text == "*shadow-lite*") {
-					std::vector<GLShader*> shaders =
-					  GLShadowShader::RegisterShader(this, settings, false, true);
-					for (const auto& shader : shaders)
-						p->Attach(*shader);
-				} else if (text == "*shadow-variance*") {
-					std::vector<GLShader*> shaders =
-					  GLShadowShader::RegisterShader(this, settings, true);
-					for (const auto& shader : shaders)
-						p->Attach(*shader);
-				} else if (text == "*dlight*") {
-					std::vector<GLShader*> shaders = GLDynamicLightShader::RegisterShader(this);
-					for (const auto& shader : shaders)
-						p->Attach(*shader);
-				} else if (text == "*shadowmap*") {
-					std::vector<GLShader*> shaders = GLShadowMapShader::RegisterShader(this);
-					for (const auto& shader : shaders)
-						p->Attach(*shader);
-				} else if (text[0] == '*') {
-					SPRaise("Unknown special shader: %s", text.c_str());
-				} else if (text[0] == '#') {
-					// Comment line
+				if (t == "*shadow*") {
+					for (const auto& f : GLShadowShader::GetShaderNames(settings, false))
+						addFile(f);
+				} else if (t == "*shadow-lite*") {
+					for (const auto& f : GLShadowShader::GetShaderNames(settings, false, true))
+						addFile(f);
+				} else if (t == "*shadow-variance*") {
+					for (const auto& f : GLShadowShader::GetShaderNames(settings, true))
+						addFile(f);
+				} else if (t == "*dlight*") {
+					for (const auto& f : GLDynamicLightShader::GetShaderNames())
+						addFile(f);
+				} else if (t == "*shadowmap*") {
+					for (const auto& f : GLShadowMapShader::GetShaderNames())
+						addFile(f);
+				} else if (t[0] == '*') {
+					SPRaise("Unknown special shader: %s", t.c_str());
 				} else {
-					auto shader = CreateShader(text);
-					p->Attach(*shader);
+					addFile(t);
 				}
+			}
+
+			auto p = stmp::make_unique<GLProgram>(&device, name);
+
+			if (!vsFiles.empty()) {
+				auto vs = CreateCombinedShader(GLShader::VertexShader, vsFiles);
+				p->Attach(*vs);
+				allocatedShaders.push_back(std::move(vs));
+			}
+
+			if (!fsFiles.empty()) {
+				auto fs = CreateCombinedShader(GLShader::FragmentShader, fsFiles);
+				p->Attach(*fs);
+				allocatedShaders.push_back(std::move(fs));
+			}
+
+			if (!gsFiles.empty()) {
+				auto gs = CreateCombinedShader(GLShader::GeometryShader, gsFiles);
+				p->Attach(*gs);
+				allocatedShaders.push_back(std::move(gs));
 			}
 
 			Stopwatch sw;
@@ -125,35 +150,34 @@ namespace spades {
 			return p;
 		}
 
-		std::unique_ptr<GLShader> GLProgramManager::CreateShader(const std::string& name) {
+		std::unique_ptr<GLShader> GLProgramManager::CreateCombinedShader(
+			GLShader::Type type, const std::vector<std::string>& fileNames) {
 			SPADES_MARK_FUNCTION();
 
-			SPLog("Loading GLSL shader '%s'", name.c_str());
-			std::string text = FileManager::ReadAllBytes(name.c_str());
-
-			GLShader::Type type;
-			if (name.find(".fs") != std::string::npos)
-				type = GLShader::FragmentShader;
-			else if (name.find(".vs") != std::string::npos)
-				type = GLShader::VertexShader;
-			else if (name.find(".gs") != std::string::npos)
-				type = GLShader::GeometryShader;
-			else
-				SPRaise("Failed to determine the type of a shader: %s", name.c_str());
+			if (fileNames.empty())
+				return nullptr;
 
 			auto s = stmp::make_unique<GLShader>(device, type);
 
 			std::string extensions;
-			std::string body;
-			std::istringstream stream(text);
-			std::string line;
-			while (std::getline(stream, line)) {
-				size_t first = line.find_first_not_of(" \t\r");
-				if (first != std::string::npos && line.compare(first, 10, "#extension") == 0) {
-					extensions += line + "\n";
-				} else {
-					body += line + "\n";
+			std::string combinedBody;
+
+			for (const auto& fname : fileNames) {
+				SPLog("Loading GLSL shader component '%s'", fname.c_str());
+				std::string content = FileManager::ReadAllBytes(fname.c_str());
+				std::istringstream stream(content);
+				std::string line;
+				while (std::getline(stream, line)) {
+					size_t first = line.find_first_not_of(" \t\r");
+					if (first != std::string::npos && line.compare(first, 10, "#extension") == 0) {
+						if (extensions.find(line) == std::string::npos) {
+							extensions += line + "\n";
+						}
+					} else {
+						combinedBody += line + "\n";
+					}
 				}
+				combinedBody += "\n";
 			}
 
 			std::string finalSource = extensions;
@@ -198,15 +222,30 @@ namespace spades {
 			}
 #endif
 
-			finalSource += body;
-
+			finalSource += combinedBody;
 			s->AddSource(finalSource);
 
 			Stopwatch sw;
 			s->Compile();
-			SPLog("Successfully compiled GLSL shader '%s' in %.3fms",
-				name.c_str(), sw.GetTime() * 1000.0);
+			SPLog("Successfully compiled combined GLSL stage (%d components) in %.3fms",
+				(int)fileNames.size(), sw.GetTime() * 1000.0);
 			return s;
+		}
+
+		std::unique_ptr<GLShader> GLProgramManager::CreateShader(const std::string& name) {
+			SPADES_MARK_FUNCTION();
+
+			GLShader::Type type;
+			if (name.find(".fs") != std::string::npos)
+				type = GLShader::FragmentShader;
+			else if (name.find(".vs") != std::string::npos)
+				type = GLShader::VertexShader;
+			else if (name.find(".gs") != std::string::npos)
+				type = GLShader::GeometryShader;
+			else
+				SPRaise("Failed to determine the type of a shader: %s", name.c_str());
+
+			return CreateCombinedShader(type, {name});
 		}
 	} // namespace draw
 } // namespace spades

@@ -58,46 +58,55 @@ namespace spades {
 		      ssaoTexture("ssaoTexture"),
 		      ssaoTextureUVScale("ssaoTextureUVScale") {}
 
-		std::vector<GLShader*> GLShadowShader::RegisterShader(spades::draw::GLProgramManager* r,
-		                                                      GLSettings& settings, bool variance,
-		                                                      bool skipSSAO) {
-			std::vector<GLShader*> shaders;
+		std::vector<std::string> GLShadowShader::GetShaderNames(GLSettings& settings, bool variance,
+		                                                        bool skipSSAO) {
+			std::vector<std::string> names;
 
 			if (skipSSAO)
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/CommonNoSSAO.fs"));
+				names.push_back("Shaders/OpenGL/Shadow/CommonNoSSAO.fs");
 			else
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Common.fs"));
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Common.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/Common.fs");
+			names.push_back("Shaders/OpenGL/Shadow/Common.vs");
 
 			if (variance) {
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapVariance.fs"));
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapVariance.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/MapVariance.fs");
+				names.push_back("Shaders/OpenGL/Shadow/MapVariance.vs");
 			} else {
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Map.fs"));
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Map.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/Map.fs");
+				names.push_back("Shaders/OpenGL/Shadow/Map.vs");
 			}
 
 			if (settings.r_modelShadows) {
 				if (settings.r_sparseShadowMaps) {
-					shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/ModelSparse.fs"));
-					shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/ModelSparse.vs"));
+					names.push_back("Shaders/OpenGL/Shadow/ModelSparse.fs");
+					names.push_back("Shaders/OpenGL/Shadow/ModelSparse.vs");
 				} else {
-					shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Model.fs"));
-					shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/Model.vs"));
+					names.push_back("Shaders/OpenGL/Shadow/Model.fs");
+					names.push_back("Shaders/OpenGL/Shadow/Model.vs");
 				}
 			} else {
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/ModelNull.fs"));
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/ModelNull.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/ModelNull.fs");
+				names.push_back("Shaders/OpenGL/Shadow/ModelNull.vs");
 			}
 
 			if (settings.r_radiosity) {
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapRadiosity.fs"));
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapRadiosity.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/MapRadiosity.fs");
+				names.push_back("Shaders/OpenGL/Shadow/MapRadiosity.vs");
 			} else {
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapRadiosityNull.fs"));
-				shaders.push_back(r->RegisterShader("Shaders/OpenGL/Shadow/MapRadiosityNull.vs"));
+				names.push_back("Shaders/OpenGL/Shadow/MapRadiosityNull.fs");
+				names.push_back("Shaders/OpenGL/Shadow/MapRadiosityNull.vs");
 			}
 
+			return names;
+		}
+
+		std::vector<GLShader*> GLShadowShader::RegisterShader(spades::draw::GLProgramManager* r,
+		                                                      GLSettings& settings, bool variance,
+		                                                      bool skipSSAO) {
+			std::vector<GLShader*> shaders;
+			for (const auto& name : GetShaderNames(settings, variance, skipSSAO)) {
+				shaders.push_back(r->RegisterShader(name));
+			}
 			return shaders;
 		}
 

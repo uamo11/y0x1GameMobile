@@ -32,20 +32,22 @@ namespace spades {
 	namespace draw {
 		GLShadowMapShader::GLShadowMapShader() : projectionViewMatrix("projectionViewMatrix") {}
 
+		std::vector<std::string> GLShadowMapShader::GetShaderNames() {
+			return {
+				"Shaders/OpenGL/ShadowMap/Common.fs",
+				"Shaders/OpenGL/ShadowMap/Common.vs",
+				"Shaders/OpenGL/ShadowMap/Basic.fs",
+				"Shaders/OpenGL/ShadowMap/Basic.vs"
+			};
+		}
+
 		std::vector<GLShader*>
 		GLShadowMapShader::RegisterShader(spades::draw::GLProgramManager* r) {
 			SPADES_MARK_FUNCTION();
 			std::vector<GLShader*> shaders;
-
-			// even there is no dynamic shadow,
-			// this is still needed to avoid error...
-
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/ShadowMap/Common.fs"));
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/ShadowMap/Common.vs"));
-
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/ShadowMap/Basic.fs"));
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/ShadowMap/Basic.vs"));
-
+			for (const auto& name : GetShaderNames()) {
+				shaders.push_back(r->RegisterShader(name));
+			}
 			return shaders;
 		}
 

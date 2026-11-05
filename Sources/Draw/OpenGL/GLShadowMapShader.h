@@ -39,6 +39,7 @@ namespace spades {
 			~GLShadowMapShader() {}
 
 			static std::vector<GLShader *> RegisterShader(GLProgramManager *);
+			static std::vector<std::string> GetShaderNames();
 
 			static std::unique_ptr<IGLShadowMapRenderer> CreateShadowMapRenderer(GLRenderer &);
 

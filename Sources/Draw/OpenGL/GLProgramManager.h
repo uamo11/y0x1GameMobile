@@ -23,6 +23,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 namespace spades {
 	namespace draw {
@@ -37,9 +38,11 @@ namespace spades {
 
 			std::unordered_map<std::string, std::unique_ptr<GLProgram>> programs;
 			std::unordered_map<std::string, std::unique_ptr<GLShader>> shaders;
+			std::vector<std::unique_ptr<GLShader>> allocatedShaders;
 
 			std::unique_ptr<GLProgram> CreateProgram(const std::string& name);
 			std::unique_ptr<GLShader> CreateShader(const std::string& name);
+			std::unique_ptr<GLShader> CreateCombinedShader(GLShader::Type type, const std::vector<std::string>& fileNames);
 
 		public:
 			GLProgramManager(IGLDevice&, GLSettings& settings);

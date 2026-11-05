@@ -51,6 +51,7 @@ namespace spades {
 			~GLDynamicLightShader();
 
 			static std::vector<GLShader *> RegisterShader(GLProgramManager *);
+			static std::vector<std::string> GetShaderNames();
 
 			/** setups shadow shader.
 			 * note that this function sets the current active texture

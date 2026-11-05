@@ -41,16 +41,21 @@ namespace spades {
 
 		GLDynamicLightShader::~GLDynamicLightShader() {}
 
+		std::vector<std::string> GLDynamicLightShader::GetShaderNames() {
+			return {
+				"Shaders/OpenGL/DynamicLight/Common.fs",
+				"Shaders/OpenGL/DynamicLight/Common.vs",
+				"Shaders/OpenGL/DynamicLight/MapNull.fs",
+				"Shaders/OpenGL/DynamicLight/MapNull.vs"
+			};
+		}
+
 		std::vector<GLShader*>
 		GLDynamicLightShader::RegisterShader(spades::draw::GLProgramManager* r) {
 			std::vector<GLShader*> shaders;
-
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/DynamicLight/Common.fs"));
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/DynamicLight/Common.vs"));
-
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/DynamicLight/MapNull.fs"));
-			shaders.push_back(r->RegisterShader("Shaders/OpenGL/DynamicLight/MapNull.vs"));
-
+			for (const auto& name : GetShaderNames()) {
+				shaders.push_back(r->RegisterShader(name));
+			}
 			return shaders;
 		}
 
