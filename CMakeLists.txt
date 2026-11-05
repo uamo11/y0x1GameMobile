@@ -265,6 +265,7 @@ configure_file("${PROJECT_SOURCE_DIR}/ZeroSpades.rc.in" "${PROJECT_BINARY_DIR}/Z
 include_directories(BEFORE "${PROJECT_BINARY_DIR}")
 if(USE_VCPKG)
 	include_directories("${PROJECT_SOURCE_DIR}/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include")
+	include_directories("${PROJECT_SOURCE_DIR}/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include/SDL2")
 	include_directories("${PROJECT_SOURCE_DIR}/vcpkg/installed/${VCPKG_TARGET_TRIPLET}/include/opus")
 else()
 	include_directories("${SDL2_INCLUDE_DIR}")
