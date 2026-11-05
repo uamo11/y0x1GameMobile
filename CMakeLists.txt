@@ -1,26 +1,44 @@
 cmake_minimum_required(VERSION 3.10)
+project(ZeroSpades)
 
-if(ANDROID)
+if(ANDROID OR DEFINED ANDROID_ABI OR VCPKG_TARGET_TRIPLET)
+	set(USE_VCPKG ON CACHE BOOL "" FORCE)
 	if(NOT DEFINED VCPKG_TARGET_TRIPLET)
 		set(VCPKG_TARGET_TRIPLET "arm64-android" CACHE STRING "")
 	endif()
-	set(USE_VCPKG ON CACHE BOOL "" FORCE)
 	set(VCPKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg" CACHE PATH "")
 	set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed" CACHE PATH "")
 	set(_VCPKG_TRIPLET_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
 
-	list(APPEND CMAKE_PREFIX_PATH "${_VCPKG_TRIPLET_DIR}")
+	list(APPEND CMAKE_PREFIX_PATH
+		"${_VCPKG_TRIPLET_DIR}"
+		"${_VCPKG_TRIPLET_DIR}/share"
+		"${_VCPKG_TRIPLET_DIR}/share/ogg"
+		"${_VCPKG_TRIPLET_DIR}/share/libogg"
+		"${_VCPKG_TRIPLET_DIR}/share/opus"
+		"${_VCPKG_TRIPLET_DIR}/share/opusfile"
+		"${_VCPKG_TRIPLET_DIR}/share/sdl2"
+		"${_VCPKG_TRIPLET_DIR}/share/sdl2-image"
+		"${_VCPKG_TRIPLET_DIR}/share/freetype"
+		"${_VCPKG_TRIPLET_DIR}/share/curl"
+	)
 	list(APPEND CMAKE_FIND_ROOT_PATH "${_VCPKG_TRIPLET_DIR}")
 	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
 	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 
-	if(EXISTS "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-		include("${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
-	endif()
-endif()
+	set(Ogg_DIR "${_VCPKG_TRIPLET_DIR}/share/ogg" CACHE PATH "")
+	set(libogg_DIR "${_VCPKG_TRIPLET_DIR}/share/libogg" CACHE PATH "")
+	set(Opus_DIR "${_VCPKG_TRIPLET_DIR}/share/opus" CACHE PATH "")
+	set(OpusFile_DIR "${_VCPKG_TRIPLET_DIR}/share/opusfile" CACHE PATH "")
+	set(SDL2_DIR "${_VCPKG_TRIPLET_DIR}/share/sdl2" CACHE PATH "")
+	set(SDL2_image_DIR "${_VCPKG_TRIPLET_DIR}/share/sdl2-image" CACHE PATH "")
+	set(freetype_DIR "${_VCPKG_TRIPLET_DIR}/share/freetype" CACHE PATH "")
+	set(CURL_DIR "${_VCPKG_TRIPLET_DIR}/share/curl" CACHE PATH "")
 
-project(ZeroSpades)
+	message(STATUS "VCPKG Triplet: ${VCPKG_TARGET_TRIPLET}")
+	message(STATUS "VCPKG Triplet Dir: ${_VCPKG_TRIPLET_DIR}")
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -52,9 +70,17 @@ if(POLICY CMP0072)
 endif()
 
 if(USE_VCPKG)
-	find_package(Ogg CONFIG REQUIRED)
-	find_package(Opus CONFIG REQUIRED)
-	find_package(OpusFile CONFIG QUIET)
+	find_package(Ogg CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/ogg" "${_VCPKG_TRIPLET_DIR}/share/libogg" "${_VCPKG_TRIPLET_DIR}")
+	if(NOT Ogg_FOUND)
+		find_package(Ogg CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/ogg" "${_VCPKG_TRIPLET_DIR}/share/libogg" "${_VCPKG_TRIPLET_DIR}")
+	endif()
+
+	find_package(Opus CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/opus" "${_VCPKG_TRIPLET_DIR}")
+	if(NOT Opus_FOUND)
+		find_package(Opus CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/opus" "${_VCPKG_TRIPLET_DIR}")
+	endif()
+
+	find_package(OpusFile CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/opusfile" "${_VCPKG_TRIPLET_DIR}")
 	if(TARGET OpusFile::opusfile)
 		set(OpusFile_LIBRARY OpusFile::opusfile)
 	else()
@@ -64,9 +90,21 @@ if(USE_VCPKG)
 		  PATHS ${CMAKE_PREFIX_PATH}
 		)
 	endif()
-	find_package(SDL2_image CONFIG REQUIRED)
-	find_package(SDL2 CONFIG REQUIRED)
-	find_package(freetype CONFIG REQUIRED)
+
+	find_package(SDL2_image CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/sdl2-image" "${_VCPKG_TRIPLET_DIR}")
+	if(NOT SDL2_image_FOUND)
+		find_package(SDL2_image CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/sdl2-image" "${_VCPKG_TRIPLET_DIR}")
+	endif()
+
+	find_package(SDL2 CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/sdl2" "${_VCPKG_TRIPLET_DIR}")
+	if(NOT SDL2_FOUND)
+		find_package(SDL2 CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/sdl2" "${_VCPKG_TRIPLET_DIR}")
+	endif()
+
+	find_package(freetype CONFIG QUIET HINTS "${_VCPKG_TRIPLET_DIR}/share/freetype" "${_VCPKG_TRIPLET_DIR}")
+	if(NOT freetype_FOUND)
+		find_package(freetype CONFIG REQUIRED HINTS "${_VCPKG_TRIPLET_DIR}/share/freetype" "${_VCPKG_TRIPLET_DIR}")
+	endif()
 
 	if(ANDROID)
 		find_package(CURL CONFIG QUIET)
