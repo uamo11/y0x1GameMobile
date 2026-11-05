@@ -180,6 +180,17 @@ namespace spades {
 				combinedBody += "\n";
 			}
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if (type == GLShader::FragmentShader) {
+				if (extensions.find("GL_EXT_shadow_samplers") == std::string::npos) {
+					extensions += "#extension GL_EXT_shadow_samplers : enable\n";
+				}
+				if (extensions.find("GL_OES_standard_derivatives") == std::string::npos) {
+					extensions += "#extension GL_OES_standard_derivatives : enable\n";
+				}
+			}
+#endif
+
 			std::string finalSource = extensions;
 
 			if (settings.r_hdr) {
@@ -215,7 +226,11 @@ namespace spades {
 				               "precision mediump float;\n"
 				               "#endif\n"
 				               "precision mediump int;\n"
-				               "precision mediump sampler2D;\n";
+				               "precision mediump sampler2D;\n"
+				               "#ifdef GL_EXT_shadow_samplers\n"
+				               "precision mediump sampler2DShadow;\n"
+				               "#define shadow2D shadow2DEXT\n"
+				               "#endif\n";
 			} else if (type == GLShader::VertexShader) {
 				finalSource += "precision highp float;\n"
 				               "precision mediump int;\n";

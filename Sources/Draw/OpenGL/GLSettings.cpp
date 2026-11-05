@@ -46,6 +46,25 @@ DEFINE_SPADES_SETTING(r_hdrAutoExposureMin, "-1.5");
 DEFINE_SPADES_SETTING(r_hdrAutoExposureMax, "0.5");
 DEFINE_SPADES_SETTING(r_hdrAutoExposureSpeed, "1");
 DEFINE_SPADES_SETTING(r_hdrGamma, "2.2");
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+DEFINE_SPADES_SETTING(r_highPrec, "0");
+DEFINE_SPADES_SETTING(r_lensFlare, "1");
+DEFINE_SPADES_SETTING(r_lensFlareDynamic, "1");
+DEFINE_SPADES_SETTING(r_maxAnisotropy, "1");
+DEFINE_SPADES_SETTING(r_modelShadows, "0");
+DEFINE_SPADES_SETTING(r_multisamples, "0");
+DEFINE_SPADES_SETTING(r_occlusionQuery, "0");
+DEFINE_SPADES_SETTING(r_physicalLighting, "0");
+DEFINE_SPADES_SETTING(r_outlines, "0");
+DEFINE_SPADES_SETTING(r_radiosity, "0");
+DEFINE_SPADES_SETTING(r_saturation, "1");
+DEFINE_SPADES_SETTING(r_scale, "1");
+DEFINE_SPADES_SETTING(r_scaleFilter, "1");
+DEFINE_SPADES_SETTING(r_shadowMapSize, "512");
+DEFINE_SPADES_SETTING(r_sharpen, "0");
+DEFINE_SPADES_SETTING(r_softParticles, "1");
+DEFINE_SPADES_SETTING(r_sparseShadowMaps, "0");
+#else
 DEFINE_SPADES_SETTING(r_highPrec, "1");
 DEFINE_SPADES_SETTING(r_lensFlare, "1");
 DEFINE_SPADES_SETTING(r_lensFlareDynamic, "1");
@@ -63,6 +82,7 @@ DEFINE_SPADES_SETTING(r_shadowMapSize, "2048");
 DEFINE_SPADES_SETTING(r_sharpen, "0");
 DEFINE_SPADES_SETTING(r_softParticles, "1");
 DEFINE_SPADES_SETTING(r_sparseShadowMaps, "1");
+#endif
 DEFINE_SPADES_SETTING(r_srgb, "0");
 DEFINE_SPADES_SETTING(r_srgb2D, "1");
 DEFINE_SPADES_SETTING(r_ssao, "0");
