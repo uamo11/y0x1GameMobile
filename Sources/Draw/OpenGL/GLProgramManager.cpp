@@ -264,7 +264,8 @@ namespace spades {
 				               "precision mediump sampler2D;\n"
 				               "#ifdef GL_EXT_shadow_samplers\n"
 				               "precision mediump sampler2DShadow;\n"
-				               "#define shadow2D shadow2DEXT\n"
+				               "#define shadow2D(s, c) vec4(shadow2DEXT(s, c))\n"
+				               "#define shadow2DProj(s, c) vec4(shadow2DProjEXT(s, c))\n"
 				               "#endif\n";
 			} else if (type == GLShader::VertexShader) {
 				finalSource += "precision highp float;\n"
