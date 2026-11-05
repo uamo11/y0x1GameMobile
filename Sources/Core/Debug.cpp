@@ -32,6 +32,10 @@
 #include <Core/Debug.h>
 #include <Imports/SDL.h>
 
+#if defined(__ANDROID__) || defined(ANDROID)
+#include <android/log.h>
+#endif
+
 #define SPADES_USE_TLS 1
 
 #if SPADES_USE_TLS
@@ -265,6 +269,9 @@ namespace spades {
 		// (1) stdout
 		std::string outStr = EscapeControlCharacters(buf);
 		printf("%s", outStr.c_str());
+#if defined(__ANDROID__) || defined(ANDROID)
+		__android_log_print(ANDROID_LOG_INFO, "ySpades", "%s", outStr.c_str());
+#endif
 
 		// (2) The log file a.k.a. `SystemMessages.log`
 		if (logStream || !attemptedToInitializeLog) {
