@@ -29,6 +29,8 @@
 #ifndef GL_POLYGON
 #  define GL_POLYGON GL_TRIANGLE_FAN
 #endif
+#define glClearDepth glClearDepthf
+#define glDepthRange glDepthRangef
 #else
 #include <GL/glew.h>
 

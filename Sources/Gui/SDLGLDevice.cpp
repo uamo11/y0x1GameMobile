@@ -290,6 +290,7 @@ namespace spades {
 		}
 
 		void SDLGLDevice::PolygonMode(Enum face, Enum val) {
+#if !defined(__ANDROID__) && !defined(ANDROID)
 			CheckExistence(glPolygonMode);
 
 			GLenum glFace;
@@ -309,6 +310,7 @@ namespace spades {
 
 			glPolygonMode(glFace, glMode);
 			CheckError();
+#endif
 		}
 		void SDLGLDevice::PolygonOffset(Float factor, Float units) {
 			CheckExistence(glPolygonOffset);

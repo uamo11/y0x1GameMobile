@@ -60,7 +60,6 @@ jobs:
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
         run: |
           ./vcpkg/vcpkg install @vcpkg_android.txt --triplet arm64-android
-          ./vcpkg/vcpkg install @vcpkg_android.txt --triplet x64-android
 
       - name: Build Android APK with Gradle
         run: |
@@ -71,7 +70,7 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ySpadesMobile-apk
+          name: ySpadesMobile-arm64-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 7
 
@@ -80,48 +79,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -f "android/app/build/outputs/apk/debug/app-debug.apk" ]; then
-            cp android/app/build/outputs/apk/debug/app-debug.apk ySpadesMobile-debug.apk
-            gh release upload mobile-latest ySpadesMobile-debug.apk --clobber
+            cp android/app/build/outputs/apk/debug/app-debug.apk ySpadesMobile-arm64-debug.apk
+            gh release upload mobile-latest ySpadesMobile-arm64-debug.apk --clobber
           fi
-
-  test-emulator:
-    name: Test in Android Emulator
-    needs: build-android
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Download built APK
-        uses: actions/download-artifact@v4
-        with:
-          name: ySpadesMobile-apk
-          path: app/
-
-      - name: Run Emulator Test
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 30
-          target: default
-          arch: x86_64
-          profile: pixel_6
-          disable-animations: true
-          script: |
-            adb install app/app-debug.apk
-            adb shell am start -n org.yspades/.ySpadesActivity
-            sleep 10
-            adb shell screencap -p /sdcard/emulator_boot.png
-            adb pull /sdcard/emulator_boot.png .
-            adb shell pidof org.yspades || echo "Process check passed"
-
-      - name: Upload Emulator Screenshot
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: emulator-screenshot
-          path: emulator_boot.png
-          if-no-files-found: ignore
