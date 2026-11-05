@@ -35,6 +35,16 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=$ANDROID_SDK_ROOT/ndk/26.1.10909125" >> $GITHUB_ENV
 
+      - name: Ensure submodules (vcpkg & openal-soft)
+        run: |
+          if [ -d "openal-soft" ]; then
+            rm -rf openal-soft
+          fi
+          git clone --depth 1 --branch 1.23.1 https://github.com/kcat/openal-soft.git openal-soft
+          if [ ! -d "vcpkg" ]; then
+            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
+          fi
+
       - name: Cache vcpkg dependencies
         uses: actions/cache@v4
         with:
@@ -43,16 +53,6 @@ jobs:
             vcpkg/buildtrees
           key: android-vcpkg-${{ hashFiles('vcpkg_android.txt', '.gitmodules') }}
           restore-keys: android-vcpkg-
-
-      - name: Ensure submodules (vcpkg & openal-soft)
-        run: |
-          if [ -d "openal-soft" ]; then
-            rm -rf openal-soft
-          fi
-          git clone --depth 1 --branch 1.23.1 https://github.com/kcat/openal-soft.git openal-soft
-          if [ ! -f "vcpkg/bootstrap-vcpkg.sh" ]; then
-            git clone --depth 1 https://github.com/microsoft/vcpkg.git vcpkg
-          fi
 
       - name: Bootstrap vcpkg
         run: ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
