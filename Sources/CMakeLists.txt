@@ -32,6 +32,8 @@ endif()
 
 if(APPLE)
 	file(GLOB PLATFORM_FILES Core/*.mm)
+elseif(ANDROID)
+	set(PLATFORM_FILES Core/iconv_compat.c)
 endif()
 
 add_subdirectory(AngelScript/projects/cmake)
@@ -230,8 +232,6 @@ elseif(ANDROID)
 	find_library(LOG_LIB log)
 	find_library(ANDROID_LIB android)
 	find_library(OPENSLES_LIB OpenSLES)
-	find_library(ICONV_LIB NAMES iconv libiconv HINTS "${_VCPKG_TRIPLET_DIR}/lib" "${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/arm64-android/lib")
-	find_library(CHARSET_LIB NAMES charset libcharset HINTS "${_VCPKG_TRIPLET_DIR}/lib" "${CMAKE_CURRENT_SOURCE_DIR}/../vcpkg/installed/arm64-android/lib")
 	target_link_libraries(ZeroSpades
 		${GLES3_LIB}
 		${EGL_LIB}
@@ -240,14 +240,6 @@ elseif(ANDROID)
 		${OPENSLES_LIB}
 		z
 	)
-	if(ICONV_LIB)
-		target_link_libraries(ZeroSpades ${ICONV_LIB})
-	else()
-		target_link_libraries(ZeroSpades iconv)
-	endif()
-	if(CHARSET_LIB)
-		target_link_libraries(ZeroSpades ${CHARSET_LIB})
-	endif()
 elseif(UNIX AND NOT APPLE)
 	target_link_libraries(ZeroSpades Xext)
 endif()
