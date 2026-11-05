@@ -178,7 +178,7 @@ namespace spades {
 			// Top Buttons: Menu (ESC) & HKS Menu (Insert)
 			escButton.key = "Escape";
 			escButton.label = "PAUSA";
-			escButton.pos = MakeVector2(75.0F, 42.0F);
+			escButton.pos = MakeVector2(80.0F, 85.0F);
 			escButton.width = 90.0F;
 			escButton.height = 36.0F;
 			escButton.radius = 28.0F;
@@ -186,7 +186,7 @@ namespace spades {
 
 			hksButton.key = "Insert";
 			hksButton.label = "MODS (Insert)";
-			hksButton.pos = MakeVector2(215.0F, 42.0F);
+			hksButton.pos = MakeVector2(220.0F, 85.0F);
 			hksButton.width = 150.0F;
 			hksButton.height = 36.0F;
 			hksButton.radius = 24.0F;
