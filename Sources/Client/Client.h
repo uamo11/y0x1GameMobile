@@ -93,6 +93,7 @@ namespace spades {
 			friend class ClientPlayer;
 			friend class ClientUI;
 			friend class LocalWorldNetClient;
+			friend class TouchHUD;
 
 			/** used to keep the input state of keypad so that
 			 * after user pressed left and right, and then
