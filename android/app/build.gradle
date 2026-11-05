@@ -5,6 +5,7 @@ plugins {
 android {
     namespace 'org.yspades'
     compileSdk 34
+    ndkVersion '26.1.10909125'
 
     defaultConfig {
         applicationId "org.yspades"
@@ -25,7 +26,7 @@ android {
                           "-DANDROID_PLATFORM=android-24",
                           "-DUSE_VCPKG=ON",
                           "-DVCPKG_TARGET_TRIPLET=arm64-android",
-                          "-DCMAKE_PROJECT_TOP_LEVEL_INCLUDE=" + file("${rootDir}/../vcpkg/scripts/buildsystems/vcpkg.cmake").absolutePath,
+                          "-DZEROSPADES_RESOURCES=OFF",
                           "-DUSE_INTERNAL_OPENAL=ON",
                           "-DCMAKE_BUILD_TYPE=Release"
                 cppFlags "-std=c++17 -frtti -fexceptions"
@@ -47,6 +48,7 @@ android {
     externalNativeBuild {
         cmake {
             path file("../../CMakeLists.txt")
+            version "3.22.1"
         }
     }
 

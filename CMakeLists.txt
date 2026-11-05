@@ -1,4 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
+
+if(ANDROID)
+	if(NOT DEFINED VCPKG_TARGET_TRIPLET)
+		set(VCPKG_TARGET_TRIPLET "arm64-android" CACHE STRING "")
+	endif()
+	set(USE_VCPKG ON CACHE BOOL "" FORCE)
+	set(VCPKG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg" CACHE PATH "")
+	set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed" CACHE PATH "")
+	set(_VCPKG_TRIPLET_DIR "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+
+	list(APPEND CMAKE_PREFIX_PATH "${_VCPKG_TRIPLET_DIR}")
+	list(APPEND CMAKE_FIND_ROOT_PATH "${_VCPKG_TRIPLET_DIR}")
+	set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
+	set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+	set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+
+	if(EXISTS "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+		include("${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
+	endif()
+endif()
+
 project(ZeroSpades)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -33,12 +54,25 @@ endif()
 if(USE_VCPKG)
 	find_package(Ogg CONFIG REQUIRED)
 	find_package(Opus CONFIG REQUIRED)
+	find_package(OpusFile CONFIG QUIET)
+	if(TARGET OpusFile::opusfile)
+		set(OpusFile_LIBRARY OpusFile::opusfile)
+	else()
+		FIND_LIBRARY(OpusFile_LIBRARY
+		  NAMES opusfile
+		  PATH_SUFFIXES lib64 lib
+		  PATHS ${CMAKE_PREFIX_PATH}
+		)
+	endif()
 	find_package(SDL2_image CONFIG REQUIRED)
 	find_package(SDL2 CONFIG REQUIRED)
 	find_package(freetype CONFIG REQUIRED)
 
 	if(ANDROID)
-		find_package(CURL REQUIRED)
+		find_package(CURL CONFIG QUIET)
+		if(NOT CURL_FOUND)
+			find_package(CURL REQUIRED)
+		endif()
 		set(CURL_LIBRARY CURL::libcurl)
 	elseif(NOT APPLE)
 		find_package(GLEW REQUIRED)
@@ -49,25 +83,38 @@ if(USE_VCPKG)
 	endif()
 
 	if(ANDROID)
-		set(SDL2_LIBRARY SDL2::SDL2)
-		set(SDL2_IMAGE_LIBRARY SDL2_image::SDL2_image)
+		if(TARGET SDL2::SDL2)
+			set(SDL2_LIBRARY SDL2::SDL2)
+		elseif(TARGET SDL2::SDL2-static)
+			set(SDL2_LIBRARY SDL2::SDL2-static)
+		endif()
+
+		if(TARGET SDL2_image::SDL2_image)
+			set(SDL2_IMAGE_LIBRARY SDL2_image::SDL2_image)
+		elseif(TARGET SDL2_image::SDL2_image-static)
+			set(SDL2_IMAGE_LIBRARY SDL2_image::SDL2_image-static)
+		endif()
 	else()
 		set(SDL2_LIBRARY SDL2::SDL2main SDL2::SDL2-static)
 		set(SDL2_IMAGE_LIBRARY SDL2_image::SDL2_image-static)
 	endif()
-	set(FREETYPE_LIBRARIES freetype)
+	if(TARGET Freetype::Freetype)
+		set(FREETYPE_LIBRARIES Freetype::Freetype)
+	else()
+		set(FREETYPE_LIBRARIES freetype)
+	endif()
+	if(TARGET Ogg::ogg)
+		set(Ogg_LIBRARY Ogg::ogg)
+	endif()
+	if(TARGET Opus::opus)
+		set(Opus_LIBRARY Opus::opus)
+	endif()
 
 	if(APPLE)
 		# Use system libraries
 		include(FindOpenGL)
 		include(FindCURL)
 	endif()
-
-	FIND_LIBRARY(OpusFile_LIBRARY
-	  NAMES opusfile
-	  PATH_SUFFIXES lib64 lib
-	  PATHS ${CMAKE_PREFIX_PATH}
-	)
 else()
 	include(cmake/FindSDL2.cmake)
 	if(NOT SDL2_FOUND)
@@ -125,6 +172,7 @@ option(USE_INTERNAL_OPENAL "Use bundled OpenAL Soft instead of system OpenAL" ON
 
 if(USE_INTERNAL_OPENAL)
 	# Add OpenAL Soft as a subdirectory
+	set(LIBTYPE "STATIC" CACHE STRING "Build static OpenAL" FORCE)
 	option(ALSOFT_UTILS "Build utility programs" OFF)
 	option(ALSOFT_NO_CONFIG_UTIL "Disable building the alsoft-config utility" ON)
 	option(ALSOFT_EXAMPLES "Build example programs" OFF)

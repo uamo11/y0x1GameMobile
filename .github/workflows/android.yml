@@ -61,6 +61,14 @@ jobs:
         run: |
           ./vcpkg/vcpkg install @vcpkg_android.txt --triplet arm64-android
 
+      - name: Prepare Game Assets
+        run: |
+          cd Resources
+          chmod +x downloadpak.sh mkpak.sh
+          ./downloadpak.sh || true
+          ./mkpak.sh || true
+          ls -lh *.pak || true
+
       - name: Build Android APK with Gradle
         run: |
           cd android
