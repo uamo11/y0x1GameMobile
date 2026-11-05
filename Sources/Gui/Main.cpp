@@ -207,6 +207,9 @@ namespace {
 	// skipping the startup/setup/main screens entirely.
 	bool g_replayDemoMenuless = false;
 
+	bool g_playWorld = false;
+	std::string g_playWorldPath;
+
 	bool g_printVersion = false;
 	bool g_printHelp = false;
 	bool g_setup = false;
@@ -334,6 +337,14 @@ namespace {
 			if (!strcasecmp(a, "--player")) {
 				if (i + 1 < argc) {
 					g_demoPlayer = argv[++i];
+					return ++i;
+				}
+				return 0;
+			}
+			if (!strcasecmp(a, "--play-world") || !strcasecmp(a, "--map")) {
+				if (i + 1 < argc) {
+					g_playWorld = true;
+					g_playWorldPath = argv[++i];
 					return ++i;
 				}
 				return 0;
@@ -1045,6 +1056,29 @@ int main(int argc, char** argv) {
 
 			SPLog("Starting demo replay: %s", g_replayDemoPath.c_str());
 			spades::StartDemoReplay(g_replayDemoPath);
+		} else if (g_playWorld) {
+			splashWindow.reset();
+			std::string mapPath = g_playWorldPath;
+			if (mapPath.find("Maps/") != 0 && mapPath.find("Maps\\") != 0) {
+				mapPath = "Maps/" + mapPath;
+			}
+			SPLog("Starting local world: %s", mapPath.c_str());
+			class LocalWorldRunner : public spades::gui::Runner {
+				std::string mapPath;
+			protected:
+				spades::gui::View* CreateView(spades::client::IRenderer* renderer,
+				                              spades::client::IAudioDevice* audio) override {
+					auto fontManager = Handle<client::FontManager>::New(renderer);
+					auto innerView = Handle<client::Client>::New(
+					    renderer, audio, ServerAddress(), fontManager, "", mapPath);
+					return new spades::gui::ConsoleScreen(renderer, audio, fontManager,
+					                                      std::move(innerView).Cast<gui::View>());
+				}
+			public:
+				LocalWorldRunner(const std::string& path) : mapPath(path) {}
+			};
+			LocalWorldRunner runner(mapPath);
+			runner.RunProtected();
 		} else if (g_setup) {
 			splashWindow.reset();
 

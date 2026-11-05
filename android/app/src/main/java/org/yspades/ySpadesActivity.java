@@ -117,4 +117,34 @@ public class ySpadesActivity extends SDLActivity {
     protected String getMainFunction() {
         return "SDL_main";
     }
+
+    @Override
+    protected String[] getArguments() {
+        android.content.Intent intent = getIntent();
+        if (intent != null) {
+            if (intent.getData() != null) {
+                String uri = intent.getData().toString();
+                if (uri.startsWith("aos://")) {
+                    Log.i(TAG, "Starting with intent data URI: " + uri);
+                    return new String[] { uri };
+                }
+            }
+            String[] customArgs = intent.getStringArrayExtra("args");
+            if (customArgs != null && customArgs.length > 0) {
+                Log.i(TAG, "Starting with intent custom args: " + java.util.Arrays.toString(customArgs));
+                return customArgs;
+            }
+            String connect = intent.getStringExtra("connect");
+            if (connect != null && !connect.isEmpty()) {
+                Log.i(TAG, "Starting with connect extra: " + connect);
+                return new String[] { connect };
+            }
+            String map = intent.getStringExtra("map");
+            if (map != null && !map.isEmpty()) {
+                Log.i(TAG, "Starting with map extra: " + map);
+                return new String[] { "--map", map };
+            }
+        }
+        return new String[0];
+    }
 }
