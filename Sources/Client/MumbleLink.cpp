@@ -45,6 +45,8 @@ namespace spades {
 		UnmapViewOfFile(mumbleLinkedMemory);
 		if (priv->obj != nullptr)
 			CloseHandle(priv->obj);
+#elif defined(__ANDROID__) || defined(ANDROID)
+		// No shm on Android
 #else
 		munmap(mumbleLinkedMemory, sizeof(*mumbleLinkedMemory));
 		if (priv->fd > 0)
@@ -60,7 +62,9 @@ namespace spades {
 
 	bool MumbleLink::Init() {
 		assert(mumbleLinkedMemory == nullptr);
-#ifdef WIN32
+#if defined(__ANDROID__) || defined(ANDROID)
+		return false;
+#elif defined(WIN32)
 		priv->obj = OpenFileMappingW(FILE_MAP_ALL_ACCESS, FALSE, L"MumbleLink");
 		if (priv->obj == nullptr)
 			return false;
