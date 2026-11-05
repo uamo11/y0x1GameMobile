@@ -23,9 +23,15 @@
 #include "GLSettings.h"
 
 DEFINE_SPADES_SETTING(r_blitFramebuffer, "1");
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+DEFINE_SPADES_SETTING(r_bloom, "0");
+DEFINE_SPADES_SETTING(r_cameraBlur, "0");
+DEFINE_SPADES_SETTING(r_colorCorrection, "0");
+#else
 DEFINE_SPADES_SETTING(r_bloom, "1");
 DEFINE_SPADES_SETTING(r_cameraBlur, "1");
 DEFINE_SPADES_SETTING(r_colorCorrection, "1");
+#endif
 DEFINE_SPADES_SETTING(r_debugTiming, "0");
 DEFINE_SPADES_SETTING(r_debugTimingOutputScreen, "1");
 DEFINE_SPADES_SETTING(r_debugTimingOutputLog, "0");
@@ -48,8 +54,8 @@ DEFINE_SPADES_SETTING(r_hdrAutoExposureSpeed, "1");
 DEFINE_SPADES_SETTING(r_hdrGamma, "2.2");
 #if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
 DEFINE_SPADES_SETTING(r_highPrec, "0");
-DEFINE_SPADES_SETTING(r_lensFlare, "1");
-DEFINE_SPADES_SETTING(r_lensFlareDynamic, "1");
+DEFINE_SPADES_SETTING(r_lensFlare, "0");
+DEFINE_SPADES_SETTING(r_lensFlareDynamic, "0");
 DEFINE_SPADES_SETTING(r_maxAnisotropy, "1");
 DEFINE_SPADES_SETTING(r_modelShadows, "0");
 DEFINE_SPADES_SETTING(r_multisamples, "0");
