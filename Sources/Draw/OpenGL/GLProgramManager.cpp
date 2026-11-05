@@ -32,6 +32,7 @@
 #include <Core/Math.h>
 #include <Core/Stopwatch.h>
 #include <Core/TMPUtils.h>
+#include <sstream>
 
 namespace spades {
 	namespace draw {
@@ -142,7 +143,20 @@ namespace spades {
 
 			auto s = stmp::make_unique<GLShader>(device, type);
 
-			std::string finalSource;
+			std::string extensions;
+			std::string body;
+			std::istringstream stream(text);
+			std::string line;
+			while (std::getline(stream, line)) {
+				size_t first = line.find_first_not_of(" \t\r");
+				if (first != std::string::npos && line.compare(first, 10, "#extension") == 0) {
+					extensions += line + "\n";
+				} else {
+					body += line + "\n";
+				}
+			}
+
+			std::string finalSource = extensions;
 
 			if (settings.r_hdr) {
 				finalSource += "#define USE_HDR 1\n";
@@ -169,7 +183,22 @@ namespace spades {
 			else
 				finalSource += "#define USE_RADIOSITY 0\n";
 
-			finalSource += text;
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if (type == GLShader::FragmentShader) {
+				finalSource += "#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
+				               "precision highp float;\n"
+				               "#else\n"
+				               "precision mediump float;\n"
+				               "#endif\n"
+				               "precision mediump int;\n"
+				               "precision mediump sampler2D;\n";
+			} else if (type == GLShader::VertexShader) {
+				finalSource += "precision highp float;\n"
+				               "precision mediump int;\n";
+			}
+#endif
+
+			finalSource += body;
 
 			s->AddSource(finalSource);
 
