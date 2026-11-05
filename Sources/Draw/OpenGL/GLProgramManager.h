@@ -24,12 +24,12 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include "GLShader.h"
 
 namespace spades {
 	namespace draw {
 		class IGLDevice;
 		class GLProgram;
-		class GLShader;
 		class IGLShadowMapRenderer;
 		class GLSettings;
 		class GLProgramManager {
