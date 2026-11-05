@@ -45,6 +45,9 @@ namespace spades {
 			virtual bool NeedsAbsoluteMouseCoordinate() { return false; }
 			virtual void WheelEvent(float x, float y) {}
 			virtual void DropFileEvent(const std::string& filePath) {}
+			virtual bool TouchFingerDown(float x, float y, int64_t fingerId) { return false; }
+			virtual bool TouchFingerUp(float x, float y, int64_t fingerId) { return false; }
+			virtual bool TouchFingerMotion(float x, float y, float dx, float dy, int64_t fingerId) { return false; }
 
 			/** Called for every frame. */
 			virtual void RunFrame(float dt) {}

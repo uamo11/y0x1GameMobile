@@ -40,6 +40,7 @@
 #include "MumbleLink.h"
 #include "NoiseSampler.h"
 #include "Player.h"
+#include "TouchHUD.h"
 #include <Core/Math.h>
 #include <Core/ServerAddress.h>
 #include <Core/Stopwatch.h>
@@ -518,6 +519,7 @@ namespace spades {
 
 			std::unique_ptr<BloodMarks> bloodMarks;
 			Handle<IModel> blockCursorModel;
+			TouchHUD touchHUD;
 
 			int nextMapShotIndex;
 
@@ -764,6 +766,10 @@ namespace spades {
 			void MouseEvent(float x, float y) override;
 			void WheelEvent(float x, float y) override;
 			void DropFileEvent(const std::string& filePath) override;
+			bool TouchFingerDown(float x, float y, int64_t fingerId) override;
+			bool TouchFingerUp(float x, float y, int64_t fingerId) override;
+			bool TouchFingerMotion(float x, float y, float dx, float dy, int64_t fingerId) override;
+			TouchHUD& GetTouchHUD() { return touchHUD; }
 			void KeyEvent(const std::string&, bool down) override;
 			void TextInputEvent(const std::string&) override;
 			void TextEditingEvent(const std::string&, int start, int len) override;

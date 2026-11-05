@@ -28,7 +28,7 @@
 
 using namespace spades::draw;
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__ANDROID__) && !defined(ANDROID)
 #define GLEW 1
 #endif
 
@@ -131,7 +131,7 @@ namespace spades {
 
 			SDL_GL_MakeCurrent(window, context);
 
-#ifndef __APPLE__
+#if !defined(__APPLE__) && !defined(__ANDROID__) && !defined(ANDROID)
 			GLenum err = glewInit();
 			if (GLEW_OK != err)
 				SPRaise("GLEW error: %s", glewGetErrorString(err));

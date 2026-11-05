@@ -711,8 +711,19 @@ int main(int argc, char** argv) {
 
 		spades::FileManager::AddFileSystem(
 		  new spades::DirectoryFileSystem(spades::g_userResourceDirectory, true));
+#elif defined(__ANDROID__) || defined(ANDROID)
+		char* prefPath = SDL_GetPrefPath("uamo11", "ySpades");
+		std::string appDir = prefPath ? prefPath : "/data/data/org.yspades/files/";
+		if (prefPath) SDL_free(prefPath);
+
+		spades::g_userResourceDirectory = appDir + "Resources";
+		spades::FileManager::AddFileSystem(
+		  new spades::DirectoryFileSystem(spades::g_userResourceDirectory, true));
+		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem("./Resources", false));
+		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem(appDir, false));
 #else
-		std::string home = getenv("HOME");
+		const char* homeEnv = getenv("HOME");
+		std::string home = homeEnv ? homeEnv : ".";
 
 		spades::FileManager::AddFileSystem(new spades::DirectoryFileSystem("./Resources", false));
 

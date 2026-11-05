@@ -59,12 +59,21 @@ if(WIN32)
 	endif()
 endif()
 
+if(ANDROID)
+add_library(ZeroSpades SHARED
+	${AUDIO_FILES} ${AUDIO_AL_FILES} ${BINPACK_FILES} ${CLIENT_FILES}
+	${CORE_FILES} ${PLATFORM_FILES} ${DRAW_GL_FILES} ${DRAW_SW_FILES} ${ENET_FILES}
+	${ENET_INCLUDE} ${GUI_FILES} ${GUI_COMPONENTS_FILES} ${GUI_UTILS_FILES} ${GUI_UI_FILES} ${IMPORTS_FILES} ${KISS_FILES}
+	${JSON_FILES} ${JSON_INCLUDE} ${UNZIP_FILES} ${SCRIPTBINDING_FILES} ${HKS_FILES}
+	${RESOURCE_FILES})
+else()
 add_executable(ZeroSpades
 	${AUDIO_FILES} ${AUDIO_AL_FILES} ${BINPACK_FILES} ${CLIENT_FILES}
 	${CORE_FILES} ${PLATFORM_FILES} ${DRAW_GL_FILES} ${DRAW_SW_FILES} ${ENET_FILES}
 	${ENET_INCLUDE} ${GUI_FILES} ${GUI_COMPONENTS_FILES} ${GUI_UTILS_FILES} ${GUI_UI_FILES} ${IMPORTS_FILES} ${KISS_FILES}
 	${JSON_FILES} ${JSON_INCLUDE} ${UNZIP_FILES} ${SCRIPTBINDING_FILES} ${HKS_FILES}
 	${RESOURCE_FILES})
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 	target_compile_options(ZeroSpades PRIVATE
@@ -215,11 +224,25 @@ endif()
 
 if(WIN32)
 	target_link_libraries(ZeroSpades ws2_32.lib winmm.lib)
+elseif(ANDROID)
+	find_library(GLES3_LIB GLESv3)
+	find_library(EGL_LIB EGL)
+	find_library(LOG_LIB log)
+	find_library(ANDROID_LIB android)
+	find_library(OPENSLES_LIB OpenSLES)
+	target_link_libraries(ZeroSpades
+		${GLES3_LIB}
+		${EGL_LIB}
+		${LOG_LIB}
+		${ANDROID_LIB}
+		${OPENSLES_LIB}
+		z
+	)
 elseif(UNIX AND NOT APPLE)
 	target_link_libraries(ZeroSpades Xext)
 endif()
 
-if(UNIX)
+if(UNIX AND NOT ANDROID)
 	if(NOT(CMAKE_SYSTEM_NAME MATCHES "BSD" OR APPLE))
 		if (NOT CMAKE_SYSTEM_NAME MATCHES "Haiku")
 			target_link_libraries(ZeroSpades rt)

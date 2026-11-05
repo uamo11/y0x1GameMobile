@@ -1,9 +1,25 @@
-# ZeroSpades ![Build status](https://github.com/siecvi/zerospades/actions/workflows/ci.yml/badge.svg) [![All releases downloads](https://img.shields.io/github/downloads/siecvi/zerospades/total.svg)](https://github.com/siecvi/zerospades/releases) [![Latest release](https://img.shields.io/github/release/siecvi/zerospades.svg)](https://github.com/siecvi/zerospades/releases)
+# ySpades Mobile [![Android CI](https://github.com/uamo11/ySpadesMobile/actions/workflows/android.yml/badge.svg)](https://github.com/uamo11/ySpadesMobile/actions/workflows/android.yml) [![Latest Mobile Release](https://img.shields.io/github/v/release/uamo11/ySpadesMobile?label=Mobile%20APK)](https://github.com/uamo11/ySpadesMobile/releases/tag/mobile-latest)
 
+**ySpades Mobile** is the Android port of **ySpades** (an enhanced, competitive client for classic [Ace of Spades](https://en.wikipedia.org/wiki/Ace_of_Spades_(video_game)) 0.75).
 
-![unknown](https://user-images.githubusercontent.com/25997662/166125363-3cdf237d-2154-4371-a44b-baea8a7abe5f.png)
+[Download Latest Android APK](https://github.com/uamo11/ySpadesMobile/releases/tag/mobile-latest) — Repository: [uamo11/ySpadesMobile](https://github.com/uamo11/ySpadesMobile)
 
-[Download](https://github.com/siecvi/zerospades/releases/latest) — Community: [BuildAndShoot](https://buildandshoot.com) - [aloha.pk](https://aloha.pk)
+---
+
+## 📱 Mobile & Android Features
+
+* **Native Android Architecture:** Powered by SDL2 (`SDLActivity`), C++17, and Android NDK (supporting `arm64-v8a` and `x86_64`).
+* **Multi-Touch Controls HUD:**
+  * **Dynamic Virtual Joystick:** Smooth analog movement and push-to-sprint on bottom-left.
+  * **Precision Aim Touchpad:** Smooth relative camera rotation and looking across the right screen.
+  * **Action Buttons:** Dedicated Fire (`LButton`), Build / Excavate (`RButton`), Jump (`Space`), Crouch (`C`), and Reload (`R`).
+  * **Quick Tool Bar:** Instant switching between Spade, Block, Gun, and Grenade (`1`-`4`).
+  * **Fast Menu Toggles:** Instant access to Escape / Ventana++ menu and in-game `HKS` menu directly from screen header buttons.
+  * **Configurable:** Adjustable touch sensitivity, opacity, and toggle in the Settings and HKS menus.
+* **Modern Mobile Graphics:** OpenGL ES 3.0 context initialization via SDL2 with optimized shader pipeline.
+* **Automated CI & Emulator Testing:** GitHub Actions compiles the APK and runs headless Android Emulator boot and verification tests with automated release deployment.
+
+---
 
 ## What is OpenSpades?
 [OpenSpades](https://github.com/yvt/openspades) is a compatible client of [Ace Of Spades](https://en.wikipedia.org/wiki/Ace_of_Spades_(video_game)) 0.75.
@@ -12,10 +28,7 @@
 * Uses OpenGL/AL for better experience.
 * Open source, and cross platform.
 
-## Ok but what the heck is ZeroSpades?
-ZeroSpades is a fork of OpenSpades with extra features and many improvements/fixes.
-
-Some of the most important changes are:
+## Features inherited from ZeroSpades & ySpades:
 
 * Demo recording/playback (credits to Fran6nd).
 * Pie menu (credits to Fran6nd).

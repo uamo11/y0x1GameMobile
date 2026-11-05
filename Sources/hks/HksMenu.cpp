@@ -304,6 +304,22 @@ namespace spades {
 				layouter->AddHelp(_Tr("Preferences",
 				    "Automatically jumps the frame you hit the ground as long as [Space] is held."));
 
+				layouter->AddHeading(_Tr("Preferences", "Mobile & Touch Controls"));
+
+				layouter->AddToggleField(_Tr("Preferences", "Touch Controls HUD"), "cg_touchHUD");
+				layouter->AddHelp(_Tr("Preferences",
+				    "Displays on-screen virtual joystick, camera touch area, and action buttons for touchscreens and mobile devices."));
+
+				layouter->AddSliderField(_Tr("Preferences", "Touch Sensitivity"), "cg_touchSensitivity",
+				                         0.5F, 4.0F, 0.1F, NumberFormatter(1, "x"));
+				layouter->AddHelp(_Tr("Preferences",
+				    "Touch camera rotation sensitivity multiplier."));
+
+				layouter->AddSliderField(_Tr("Preferences", "Touch HUD Opacity"), "cg_touchOpacity",
+				                         0.10F, 1.00F, 0.05F, NumberFormatter(2, ""));
+				layouter->AddHelp(_Tr("Preferences",
+				    "Visual transparency of on-screen touch controls."));
+
 				layouter->FinishLayout();
 				AddTab(panel.GetPointerOrNull(), _Tr("Preferences", "Movement"), nav.GetPointerOrNull(),
 				       gui::GuiIconType::Movement);

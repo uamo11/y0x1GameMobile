@@ -178,6 +178,32 @@ namespace spades {
 				case SDL_MOUSEWHEEL:
 					view.WheelEvent(static_cast<float>(-event.wheel.x), static_cast<float>(-event.wheel.y));
 					break;
+				case SDL_FINGERDOWN: {
+					int winW = 1280, winH = 720;
+					if (s_activeWindow) SDL_GetWindowSize(s_activeWindow, &winW, &winH);
+					float fx = event.tfinger.x * static_cast<float>(winW);
+					float fy = event.tfinger.y * static_cast<float>(winH);
+					view.TouchFingerDown(fx, fy, event.tfinger.fingerId);
+					break;
+				}
+				case SDL_FINGERUP: {
+					int winW = 1280, winH = 720;
+					if (s_activeWindow) SDL_GetWindowSize(s_activeWindow, &winW, &winH);
+					float fx = event.tfinger.x * static_cast<float>(winW);
+					float fy = event.tfinger.y * static_cast<float>(winH);
+					view.TouchFingerUp(fx, fy, event.tfinger.fingerId);
+					break;
+				}
+				case SDL_FINGERMOTION: {
+					int winW = 1280, winH = 720;
+					if (s_activeWindow) SDL_GetWindowSize(s_activeWindow, &winW, &winH);
+					float fx = event.tfinger.x * static_cast<float>(winW);
+					float fy = event.tfinger.y * static_cast<float>(winH);
+					float fdx = event.tfinger.dx * static_cast<float>(winW);
+					float fdy = event.tfinger.dy * static_cast<float>(winH);
+					view.TouchFingerMotion(fx, fy, fdx, fdy, event.tfinger.fingerId);
+					break;
+				}
 				case SDL_KEYDOWN:
 					if (!event.key.repeat) {
 						const SDL_Keysym& keysym = event.key.keysym;
@@ -534,6 +560,11 @@ namespace spades {
 				switch (rtype) {
 					case RendererType::GL:
 						sdlFlags = SDL_WINDOW_OPENGL;
+#if defined(__ANDROID__) || defined(ANDROID)
+						SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+						SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+						SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+#endif
 						SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 						SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
 						SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);

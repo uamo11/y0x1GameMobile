@@ -1289,5 +1289,26 @@ namespace spades {
 				}
 			}
 		}
+
+		bool Client::TouchFingerDown(float x, float y, int64_t fingerId) {
+			if (world && TouchHUD::IsEnabled()) {
+				return touchHUD.HandleFingerDown(x, y, fingerId, *this);
+			}
+			return false;
+		}
+
+		bool Client::TouchFingerUp(float x, float y, int64_t fingerId) {
+			if (world && TouchHUD::IsEnabled()) {
+				return touchHUD.HandleFingerUp(x, y, fingerId, *this);
+			}
+			return false;
+		}
+
+		bool Client::TouchFingerMotion(float x, float y, float dx, float dy, int64_t fingerId) {
+			if (world && TouchHUD::IsEnabled()) {
+				return touchHUD.HandleFingerMotion(x, y, dx, dy, fingerId, *this);
+			}
+			return false;
+		}
 	} // namespace client
 } // namespace spades

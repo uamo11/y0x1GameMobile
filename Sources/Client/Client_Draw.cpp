@@ -2968,6 +2968,12 @@ namespace spades {
 			// draw limbo view (above everything)
 			if (IsLimboViewActive() && !scriptedUI->NeedsInput())
 				limboMenu->Draw();
+
+			// Draw Mobile Touch HUD if enabled and active
+			if (TouchHUD::IsEnabled() && !scriptedUI->NeedsInput()) {
+				touchHUD.UpdateLayout(sw, sh);
+				touchHUD.Draw(*renderer, *this);
+			}
 		}
 
 		void Client::Draw2DWithoutWorld() {
