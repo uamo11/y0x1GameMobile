@@ -242,10 +242,14 @@ namespace spades {
 
 		void SDLGLDevice::Swap() {
 			// Ensure default backbuffer before swap
+#if defined(__ANDROID__) || defined(ANDROID)
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#else
 			if (glBindFramebuffer)
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			else if (glBindFramebufferEXT)
 				glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+#endif
 
 			CheckError();
 			SDL_GL_SwapWindow(window);
@@ -339,15 +343,25 @@ namespace spades {
 
 		void SDLGLDevice::Enable(Enum s, bool b) {
 			SPADES_MARK_FUNCTION();
+#if defined(__ANDROID__) || defined(ANDROID)
+			if (s == Multisample || s == FramebufferSRGB || s == Texture2D)
+				return;
+#endif
 			GLenum type;
 			switch (s) {
 				case DepthTest: type = GL_DEPTH_TEST; break;
 				case CullFace: type = GL_CULL_FACE; break;
 				case Blend: type = GL_BLEND; break;
+#if defined(GL_POLYGON_OFFSET_LINE) && !defined(__ANDROID__) && !defined(ANDROID)
 				case PolygonOffsetLine: type = GL_POLYGON_OFFSET_LINE; break;
+#else
+				case PolygonOffsetLine: type = GL_POLYGON_OFFSET_FILL; break;
+#endif
 				case Texture2D: type = GL_TEXTURE_2D; break;
+#if !defined(__ANDROID__) && !defined(ANDROID)
 				case Multisample: type = GL_MULTISAMPLE; break;
 				case FramebufferSRGB: type = GL_FRAMEBUFFER_SRGB; break;
+#endif
 				case StencilTest: type = GL_STENCIL_TEST; break;
 				case ScissorTest: type = GL_SCISSOR_TEST; break;
 				default: SPInvalidEnum("state", s);
@@ -542,6 +556,21 @@ namespace spades {
 
 		void* SDLGLDevice::MapBuffer(Enum target, Enum access) {
 			SPADES_MARK_FUNCTION_DEBUG();
+			void* ret = nullptr;
+#if defined(__ANDROID__) || defined(ANDROID)
+			GLbitfield flags = 0;
+			switch (access) {
+				case draw::IGLDevice::ReadOnly: flags = GL_MAP_READ_BIT; break;
+				case draw::IGLDevice::WriteOnly: flags = GL_MAP_WRITE_BIT; break;
+				case draw::IGLDevice::ReadWrite: flags = GL_MAP_READ_BIT | GL_MAP_WRITE_BIT; break;
+				default: SPInvalidEnum("access", access);
+			}
+			GLint size = 0;
+			glGetBufferParameteriv(parseBufferTarget(target), GL_BUFFER_SIZE, &size);
+			if (size > 0) {
+				ret = glMapBufferRange(parseBufferTarget(target), 0, (GLsizeiptr)size, flags);
+			}
+#else
 			GLenum acc;
 			switch (access) {
 				case draw::IGLDevice::ReadOnly: acc = GL_READ_ONLY; break;
@@ -549,7 +578,6 @@ namespace spades {
 				case draw::IGLDevice::ReadWrite: acc = GL_READ_WRITE; break;
 				default: SPInvalidEnum("access", access);
 			}
-			void* ret = nullptr;
 #if GLEW
 			if (glMapBuffer)
 				ret = glMapBuffer(parseBufferTarget(target), acc);
@@ -560,6 +588,7 @@ namespace spades {
 #else
 			CheckExistence(glMapBuffer);
 			ret = glMapBuffer(parseBufferTarget(target), acc);
+#endif
 #endif
 			CheckError();
 			return ret;
@@ -680,15 +709,29 @@ namespace spades {
 		static GLenum parseQueryTarget(IGLDevice::Enum target) {
 			SPADES_MARK_FUNCTION_DEBUG();
 			switch (target) {
+#if defined(GL_SAMPLES_PASSED)
 				case IGLDevice::SamplesPassed: return GL_SAMPLES_PASSED;
+#else
+				case IGLDevice::SamplesPassed: return GL_ANY_SAMPLES_PASSED;
+#endif
 				case IGLDevice::AnySamplesPassed: return GL_ANY_SAMPLES_PASSED;
+#if defined(GL_TIME_ELAPSED)
 				case IGLDevice::TimeElapsed: return GL_TIME_ELAPSED;
+#elif defined(GL_TIME_ELAPSED_EXT)
+				case IGLDevice::TimeElapsed: return GL_TIME_ELAPSED_EXT;
+#else
+				case IGLDevice::TimeElapsed: return GL_ANY_SAMPLES_PASSED;
+#endif
 				default: SPInvalidEnum("target", target);
 			}
 		}
 
 		void SDLGLDevice::BeginQuery(Enum target, UInteger query) {
 			SPADES_MARK_FUNCTION_DEBUG();
+#if defined(__ANDROID__) || defined(ANDROID)
+			if (target == IGLDevice::TimeElapsed)
+				return;
+#endif
 #if GLEW
 			if (glBeginQuery)
 				glBeginQuery(parseQueryTarget(target), query);
@@ -705,6 +748,10 @@ namespace spades {
 
 		void SDLGLDevice::EndQuery(Enum target) {
 			SPADES_MARK_FUNCTION_DEBUG();
+#if defined(__ANDROID__) || defined(ANDROID)
+			if (target == IGLDevice::TimeElapsed)
+				return;
+#endif
 #if GLEW
 			if (glEndQuery)
 				glEndQuery(parseQueryTarget(target));
@@ -785,6 +832,18 @@ namespace spades {
 			} else {
 				ReportMissingFunc("glGetQueryObjectui64v");
 			}
+#elif defined(__ANDROID__) || defined(ANDROID)
+			GLuint val32 = 0;
+			switch (pname) {
+				case draw::IGLDevice::QueryResult:
+					glGetQueryObjectuiv(query, GL_QUERY_RESULT, &val32);
+					break;
+				case draw::IGLDevice::QueryResultAvailable:
+					glGetQueryObjectuiv(query, GL_QUERY_RESULT_AVAILABLE, &val32);
+					break;
+				default: SPInvalidEnum("pname", pname);
+			}
+			val = val32;
 #else
 			CheckExistence(glGetQueryObjectui64v);
 			switch (pname) {
@@ -800,6 +859,9 @@ namespace spades {
 
 		void SDLGLDevice::BeginConditionalRender(UInteger query, Enum mode) {
 			SPADES_MARK_FUNCTION_DEBUG();
+#if defined(__ANDROID__) || defined(ANDROID)
+			(void)query; (void)mode;
+#else
 			GLenum md;
 			switch (mode) {
 				case draw::IGLDevice::QueryWait: md = GL_QUERY_WAIT; break;
@@ -821,10 +883,14 @@ namespace spades {
 			glBeginConditionalRender(query, md);
 #endif
 			CheckError();
+#endif
 		}
 
 		void SDLGLDevice::EndConditionalRender() {
 			SPADES_MARK_FUNCTION_DEBUG();
+#if defined(__ANDROID__) || defined(ANDROID)
+			// Conditional render is not supported in standard GLES 3.0
+#else
 #if GLEW
 			if (glEndConditionalRender)
 				glEndConditionalRender();
@@ -837,6 +903,7 @@ namespace spades {
 			glEndConditionalRender();
 #endif
 			CheckError();
+#endif
 		}
 
 		IGLDevice::UInteger SDLGLDevice::GenTexture() {

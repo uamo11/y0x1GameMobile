@@ -29,6 +29,13 @@
 #ifndef GL_POLYGON
 #  define GL_POLYGON GL_TRIANGLE_FAN
 #endif
+#ifndef GL_BGRA
+#  ifdef GL_BGRA_EXT
+#    define GL_BGRA GL_BGRA_EXT
+#  else
+#    define GL_BGRA 0x80E1
+#  endif
+#endif
 #define glClearDepth glClearDepthf
 #define glDepthRange glDepthRangef
 #else
