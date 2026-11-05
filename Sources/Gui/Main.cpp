@@ -482,11 +482,11 @@ namespace spades {
 	}
 } // namespace spades
 
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__ANDROID__) && !defined(ANDROID)
 #include <spawn.h>
 #include <unistd.h>
 extern char** environ;
-#else
+#elif defined(_WIN32)
 #include <process.h>
 #endif
 
@@ -557,6 +557,9 @@ namespace spades {
 			posix_spawnp(&pid, args[0], nullptr, nullptr,
 			             const_cast<char**>(args.data()), environ);
 		}
+#elif defined(__ANDROID__) || defined(ANDROID)
+		// On Android, relaunching via posix_spawnp is not supported
+		return;
 #else
 		const char* argv[] = {g_executablePath.c_str(), "--open-mods", nullptr};
 		pid_t pid = 0;
