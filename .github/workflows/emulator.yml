@@ -1,0 +1,48 @@
+name: Emulator Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/emulator.yml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable KVM group perms
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download APK from release
+        run: |
+          gh release download mobile-latest -p "*.apk"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Android Emulator and capture screenshot
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: arm64-v8a
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: |
+            adb install -r ySpadesMobile-arm64-debug.apk
+            adb shell am start -n org.yspades/.ySpadesActivity
+            sleep 15
+            adb shell screencap -p /sdcard/screenshot.png
+            adb pull /sdcard/screenshot.png ./screenshot.png
+
+      - name: Upload Screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-screenshot
+          path: screenshot.png
