@@ -7,10 +7,13 @@
 #include "TouchHUD.h"
 #include <cmath>
 #include <algorithm>
+#include <cstdio>
 
 #include <Client/Client.h>
 #include <Client/Fonts.h>
 #include <Client/IRenderer.h>
+#include <Client/Player.h>
+#include <Client/World.h>
 #include <Core/Settings.h>
 
 #if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
@@ -20,10 +23,56 @@ DEFINE_SPADES_SETTING(cg_touchHUD, "0");
 #endif
 
 DEFINE_SPADES_SETTING(cg_touchSensitivity, "1.2");
-DEFINE_SPADES_SETTING(cg_touchOpacity, "0.55");
+DEFINE_SPADES_SETTING(cg_touchOpacity, "0.65");
 
 namespace spades {
 	namespace client {
+
+		static void DrawGlassCircle(IRenderer& r, const Vector2& center, float radius,
+		                            bool active, const Vector4& glowColor, float opacity) {
+			// 1. Dark translucent glass background
+			Vector4 bg = active
+			    ? MakeVector4(glowColor.x * 0.40F, glowColor.y * 0.40F, glowColor.z * 0.40F, opacity * 0.90F)
+			    : MakeVector4(0.08F, 0.10F, 0.16F, opacity * 0.65F);
+			r.SetColorAlphaPremultiplied(bg);
+			r.DrawFilledCircle(center, radius);
+
+			// 2. Outer glowing ring
+			Vector4 ring = active
+			    ? MakeVector4(glowColor.x, glowColor.y, glowColor.z, opacity * 0.98F)
+			    : MakeVector4(0.70F, 0.80F, 0.95F, opacity * 0.65F);
+			r.SetColorAlphaPremultiplied(ring);
+			r.DrawOutlinedCircle(center, radius, active ? 2.5F : 1.8F);
+
+			// 3. Inner highlight rim
+			if (!active) {
+				Vector4 innerRim = MakeVector4(1.0F, 1.0F, 1.0F, opacity * 0.18F);
+				r.SetColorAlphaPremultiplied(innerRim);
+				r.DrawOutlinedCircle(center, radius * 0.88F, 1.0F);
+			}
+		}
+
+		static void DrawGlassCard(IRenderer& r, float x, float y, float w, float h,
+		                          bool active, bool isCurrentWeapon, const Vector4& glowColor, float opacity) {
+			float x0 = x - w * 0.5F;
+			float y0 = y - h * 0.5F;
+			float x1 = x + w * 0.5F;
+			float y1 = y + h * 0.5F;
+
+			// Dark glass body
+			Vector4 bg = (active || isCurrentWeapon)
+			    ? MakeVector4(glowColor.x * 0.30F, glowColor.y * 0.30F, glowColor.z * 0.30F, opacity * 0.90F)
+			    : MakeVector4(0.08F, 0.10F, 0.16F, opacity * 0.60F);
+			r.SetColorAlphaPremultiplied(bg);
+			r.DrawFilledRect(x0, y0, x1, y1);
+
+			// Glowing border
+			Vector4 border = (active || isCurrentWeapon)
+			    ? MakeVector4(glowColor.x, glowColor.y, glowColor.z, opacity * 0.98F)
+			    : MakeVector4(0.55F, 0.65F, 0.80F, opacity * 0.45F);
+			r.SetColorAlphaPremultiplied(border);
+			r.DrawOutlinedRect(x0, y0, x1, y1, (active || isCurrentWeapon) ? 2 : 1);
+		}
 
 		TouchHUD::TouchHUD() {
 			UpdateLayout(1280.0F, 720.0F);
@@ -33,176 +82,374 @@ namespace spades {
 			return cg_touchHUD;
 		}
 
+		void TouchHUD::LoadAssets(IRenderer& r) {
+			if (assetsLoaded)
+				return;
+
+			imgJoystick = r.RegisterImage("Gfx/Touch/joystick.png");
+			imgKnob = r.RegisterImage("Gfx/Touch/knob.png");
+			imgReload = r.RegisterImage("Gfx/Touch/reload.png");
+			imgArrow = r.RegisterImage("Gfx/Touch/arrow.png");
+			imgSpade = r.RegisterImage("Gfx/Hotbar/Spade.png");
+			imgBlock = r.RegisterImage("Gfx/Hotbar/Block.png");
+			imgRifle = r.RegisterImage("Gfx/Hotbar/Rifle.png");
+			imgSMG = r.RegisterImage("Gfx/Hotbar/SMG.png");
+			imgShotgun = r.RegisterImage("Gfx/Hotbar/Shotgun.png");
+			imgGrenade = r.RegisterImage("Gfx/Hotbar/Grenade.png");
+
+			assetsLoaded = true;
+		}
+
 		void TouchHUD::UpdateLayout(float screenWidth, float screenHeight) {
 			sw = screenWidth;
 			sh = screenHeight;
 
 			// Left joystick centered at bottom-left
-			joystickCenter = MakeVector2(sw * 0.13F, sh * 0.75F);
-			joystickBaseRadius = std::min(sw, sh) * 0.14F;
-			joystickKnobRadius = joystickBaseRadius * 0.45F;
+			joystickCenter = MakeVector2(sw * 0.12F, sh * 0.74F);
+			joystickBaseRadius = std::min(sw, sh) * 0.15F;
+			joystickKnobRadius = joystickBaseRadius * 0.42F;
 			if (!joystickActive) {
 				joystickCurrent = joystickCenter;
 			}
 
-			buttons.clear();
-			toolSlots.clear();
-
-			float rAction = std::min(sw, sh) * 0.075F;
-			float rSmall = std::min(sw, sh) * 0.055F;
-
 			// Right Hand Action Buttons
-			// 1. Fire / Mine (LButton)
-			TouchButton btnFire;
+			float rFire = std::min(sw, sh) * 0.082F;    // Primary large button
+			float rAction = std::min(sw, sh) * 0.068F;  // Secondary medium button
+			float rSmall = std::min(sw, sh) * 0.055F;   // Utility small button
+
+			// 1. Primary Trigger: FIRE (LButton)
 			btnFire.key = "LButton";
 			btnFire.label = "FIRE";
-			btnFire.pos = MakeVector2(sw - rAction * 1.5F, sh - rAction * 2.2F);
-			btnFire.radius = rAction;
-			buttons.push_back(btnFire);
+			btnFire.pos = MakeVector2(sw - rFire * 1.55F, sh - rFire * 2.15F);
+			btnFire.radius = rFire;
+			btnFire.isRect = false;
 
-			// 2. Build / Dig 3x (RButton)
-			TouchButton btnBuild;
-			btnBuild.key = "RButton";
-			btnBuild.label = "BUILD";
-			btnBuild.pos = MakeVector2(sw - rAction * 3.4F, sh - rAction * 1.7F);
-			btnBuild.radius = rAction * 0.9F;
-			buttons.push_back(btnBuild);
+			// 2. Secondary Action: AIM / SCOPE / BUILD (RButton)
+			btnAim.key = "RButton";
+			btnAim.label = "AIM";
+			btnAim.pos = MakeVector2(sw - rFire * 3.35F, sh - rFire * 1.65F);
+			btnAim.radius = rAction;
+			btnAim.isRect = false;
 
-			// 3. Jump (Space)
-			TouchButton btnJump;
+			// 3. Mobility: JUMP (Space)
 			btnJump.key = "Space";
 			btnJump.label = "JUMP";
-			btnJump.pos = MakeVector2(sw - rAction * 1.5F, sh - rAction * 4.2F);
-			btnJump.radius = rAction * 0.85F;
-			buttons.push_back(btnJump);
+			btnJump.pos = MakeVector2(sw - rFire * 1.35F, sh - rFire * 3.85F);
+			btnJump.radius = rAction;
+			btnJump.isRect = false;
 
-			// 4. Crouch / Sneak (C)
-			TouchButton btnCrouch;
+			// 4. Stance: CROUCH (C)
 			btnCrouch.key = "C";
 			btnCrouch.label = "CROUCH";
-			btnCrouch.pos = MakeVector2(sw - rAction * 3.3F, sh - rAction * 3.5F);
+			btnCrouch.pos = MakeVector2(sw - rFire * 3.05F, sh - rFire * 3.15F);
 			btnCrouch.radius = rSmall;
-			buttons.push_back(btnCrouch);
+			btnCrouch.isRect = false;
 
-			// 5. Reload (R)
-			TouchButton btnReload;
+			// 5. Utility: RELOAD (R)
 			btnReload.key = "R";
 			btnReload.label = "RELOAD";
-			btnReload.pos = MakeVector2(sw - rAction * 2.3F, sh - rAction * 5.2F);
+			btnReload.pos = MakeVector2(sw - rFire * 2.2F, sh - rFire * 4.65F);
 			btnReload.radius = rSmall;
-			buttons.push_back(btnReload);
+			btnReload.isRect = false;
 
-			// Quick Weapon & Tool Slots (Bottom center)
-			const char* toolLabels[4] = {"1:SPADE", "2:BLOCK", "3:GUN", "4:GRENADE"};
+			// Bottom Weapon / Tool Slots
+			toolSlots.clear();
 			const char* toolKeys[4] = {"1", "2", "3", "4"};
-			float slotW = std::min(sw, sh) * 0.12F;
-			float startX = (sw * 0.5F) - (slotW * 2.0F) + (slotW * 0.5F);
-			float slotY = sh - rSmall * 1.2F;
+			const char* toolNames[4] = {"1:PALA", "2:BLOQUE", "3:ARMA", "4:GRANADA"};
+			float cardW = std::min(sw, sh) * 0.12F;
+			float cardH = std::min(sw, sh) * 0.075F;
+			float spacing = 8.0F;
+			float totalW = 4.0F * cardW + 3.0F * spacing;
+			float startX = (sw - totalW) * 0.5F + cardW * 0.5F;
+			float slotY = sh - cardH * 0.65F - 4.0F;
 
 			for (int i = 0; i < 4; i++) {
 				TouchButton slot;
 				slot.key = toolKeys[i];
-				slot.label = toolLabels[i];
-				slot.pos = MakeVector2(startX + static_cast<float>(i) * (slotW + 6.0F), slotY);
-				slot.radius = rSmall * 0.9F;
+				slot.label = toolNames[i];
+				slot.pos = MakeVector2(startX + static_cast<float>(i) * (cardW + spacing), slotY);
+				slot.width = cardW;
+				slot.height = cardH;
+				slot.radius = cardW * 0.5F;
+				slot.isRect = true;
 				toolSlots.push_back(slot);
 			}
 
 			// Top Buttons: Menu (ESC) & HKS Menu (Insert)
 			escButton.key = "Escape";
 			escButton.label = "MENU";
-			escButton.pos = MakeVector2(48.0F, 36.0F);
+			escButton.pos = MakeVector2(54.0F, 34.0F);
+			escButton.width = 76.0F;
+			escButton.height = 36.0F;
 			escButton.radius = 28.0F;
+			escButton.isRect = true;
 
 			hksButton.key = "Insert";
 			hksButton.label = "HKS";
-			hksButton.pos = MakeVector2(sw * 0.5F, 36.0F);
-			hksButton.radius = 28.0F;
+			hksButton.pos = MakeVector2(sw * 0.5F, 34.0F);
+			hksButton.width = 68.0F;
+			hksButton.height = 36.0F;
+			hksButton.radius = 24.0F;
+			hksButton.isRect = true;
 		}
 
 		void TouchHUD::Draw(IRenderer& r, Client& client) {
 			if (!cg_touchHUD || !client.fontManager)
 				return;
 
-			float op = Clamp(static_cast<float>(cg_touchOpacity), 0.1F, 1.0F);
+			LoadAssets(r);
+
+			float op = Clamp(static_cast<float>(cg_touchOpacity), 0.15F, 1.0F);
 			IFont& font = client.fontManager->GetGuiFont();
 			IFont& smallFont = client.fontManager->GetSmallFont();
 
-			Vector4 baseCol = MakeVector4(0.12F, 0.15F, 0.22F, op * 0.6F);
-			Vector4 knobCol = MakeVector4(0.35F, 0.55F, 0.85F, op * 0.9F);
-			Vector4 ringCol = MakeVector4(0.80F, 0.85F, 0.95F, op * 0.8F);
+			// Query active player state
+			int activeTool = -1;
+			WeaponType weaponType = RIFLE_WEAPON;
+			IntVector3 heldBlockColor = MakeIntVector3(255, 255, 255);
+			bool isHoldingWeapon = false;
+
+			if (client.GetWorld()) {
+				auto maybePlayer = client.GetWorld()->GetLocalPlayer();
+				if (maybePlayer) {
+					Player& p = maybePlayer.value();
+					activeTool = static_cast<int>(p.GetTool());
+					weaponType = p.GetWeaponType();
+					heldBlockColor = p.GetBlockColor();
+					isHoldingWeapon = p.IsToolWeapon();
+				}
+			}
+
+			// Dynamic label for secondary button
+			btnAim.label = isHoldingWeapon ? "AIM" : (activeTool == Player::ToolBlock ? "BUILD" : "DIG");
 
 			// 1. Draw Virtual Joystick
-			r.SetColorAlphaPremultiplied(baseCol);
-			r.DrawFilledCircle(joystickCenter, joystickBaseRadius);
-			r.SetColorAlphaPremultiplied(ringCol);
-			r.DrawOutlinedCircle(joystickCenter, joystickBaseRadius, 2.0F);
+			if (imgJoystick) {
+				r.SetColorAlphaPremultiplied(MakeVector4(1.0F, 1.0F, 1.0F, op * 0.85F));
+				r.DrawImage(*imgJoystick, AABB2(joystickCenter.x - joystickBaseRadius,
+				                                joystickCenter.y - joystickBaseRadius,
+				                                joystickBaseRadius * 2.0F,
+				                                joystickBaseRadius * 2.0F));
+			} else {
+				r.SetColorAlphaPremultiplied(MakeVector4(0.08F, 0.10F, 0.16F, op * 0.60F));
+				r.DrawFilledCircle(joystickCenter, joystickBaseRadius);
+				r.SetColorAlphaPremultiplied(MakeVector4(0.70F, 0.85F, 1.0F, op * 0.75F));
+				r.DrawOutlinedCircle(joystickCenter, joystickBaseRadius, 2.0F);
+			}
 
-			// Direction indicators
-			r.DrawOutlinedCircle(joystickCenter, joystickBaseRadius * 0.5F, 1.0F);
+			// Center rest dot
+			if (imgKnob) {
+				float restDotSz = joystickKnobRadius * 0.55F;
+				r.SetColorAlphaPremultiplied(MakeVector4(0.6F, 0.75F, 0.9F, op * 0.45F));
+				r.DrawImage(*imgKnob, AABB2(joystickCenter.x - restDotSz * 0.5F,
+				                            joystickCenter.y - restDotSz * 0.5F,
+				                            restDotSz, restDotSz));
+			}
 
-			r.SetColorAlphaPremultiplied(joystickActive ? knobCol : MakeVector4(0.3F, 0.4F, 0.5F, op * 0.7F));
-			r.DrawFilledCircle(joystickCurrent, joystickKnobRadius);
-			r.SetColorAlphaPremultiplied(MakeVector4(1.0F, 1.0F, 1.0F, op));
-			r.DrawOutlinedCircle(joystickCurrent, joystickKnobRadius, 2.0F);
+			// Dynamic thumbstick knob
+			if (joystickActive) {
+				r.SetColorAlphaPremultiplied(MakeVector4(0.35F, 0.75F, 1.0F, op * 0.50F));
+				r.DrawLine(joystickCenter, joystickCurrent, 2.0F);
+			}
 
-			// 2. Draw Action Buttons
-			for (const auto& btn : buttons) {
-				Vector4 fillCol = btn.active ? MakeVector4(0.95F, 0.35F, 0.25F, op * 0.9F)
-				                             : MakeVector4(0.10F, 0.12F, 0.18F, op * 0.65F);
-				if (btn.key == "RButton") {
-					fillCol = btn.active ? MakeVector4(0.20F, 0.75F, 0.45F, op * 0.9F)
-					                     : MakeVector4(0.10F, 0.18F, 0.14F, op * 0.65F);
-				} else if (btn.key == "Space") {
-					fillCol = btn.active ? MakeVector4(0.30F, 0.60F, 1.0F, op * 0.9F)
-					                     : MakeVector4(0.12F, 0.16F, 0.24F, op * 0.65F);
+			if (imgKnob) {
+				float knobSz = joystickKnobRadius * 2.0F;
+				Vector4 knobTint = joystickActive
+				    ? MakeVector4(0.35F, 0.85F, 1.0F, op * 0.98F)
+				    : MakeVector4(0.85F, 0.90F, 0.98F, op * 0.75F);
+				r.SetColorAlphaPremultiplied(knobTint);
+				r.DrawImage(*imgKnob, AABB2(joystickCurrent.x - knobSz * 0.5F,
+				                            joystickCurrent.y - knobSz * 0.5F,
+				                            knobSz, knobSz));
+			} else {
+				Vector4 knobCol = joystickActive ? MakeVector4(0.35F, 0.75F, 1.0F, op * 0.95F)
+				                                 : MakeVector4(0.7F, 0.8F, 0.9F, op * 0.70F);
+				r.SetColorAlphaPremultiplied(knobCol);
+				r.DrawFilledCircle(joystickCurrent, joystickKnobRadius);
+				r.SetColorAlphaPremultiplied(MakeVector4(1.0F, 1.0F, 1.0F, op));
+				r.DrawOutlinedCircle(joystickCurrent, joystickKnobRadius, 2.0F);
+			}
+
+			// 2. Draw FIRE Button (Tactical Reticle)
+			{
+				Vector4 fireGlow = MakeVector4(1.0F, 0.30F, 0.15F, 1.0F);
+				DrawGlassCircle(r, btnFire.pos, btnFire.radius, btnFire.active, fireGlow, op);
+
+				Vector4 reticleCol = btnFire.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+				                                    : MakeVector4(1.0F, 0.45F, 0.35F, op * 0.85F);
+				r.SetColorAlphaPremultiplied(reticleCol);
+				float retR = btnFire.radius * 0.40F;
+				r.DrawOutlinedCircle(btnFire.pos, retR, 1.8F);
+
+				float pipIn = retR * 0.55F;
+				float pipOut = retR * 1.45F;
+				r.DrawLine(btnFire.pos - MakeVector2(pipOut, 0), btnFire.pos - MakeVector2(pipIn, 0), 2.0F);
+				r.DrawLine(btnFire.pos + MakeVector2(pipIn, 0), btnFire.pos + MakeVector2(pipOut, 0), 2.0F);
+				r.DrawLine(btnFire.pos - MakeVector2(0, pipOut), btnFire.pos - MakeVector2(0, pipIn), 2.0F);
+				r.DrawLine(btnFire.pos + MakeVector2(0, pipIn), btnFire.pos + MakeVector2(0, pipOut), 2.0F);
+				r.DrawFilledCircle(btnFire.pos, 2.0F);
+
+				Vector2 sz = smallFont.Measure("FIRE");
+				smallFont.DrawShadow("FIRE", btnFire.pos + MakeVector2(-sz.x * 0.5F, btnFire.radius * 0.45F), 0.75F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+			}
+
+			// 3. Draw AIM / BUILD Button (Scope / Cube)
+			{
+				Vector4 aimGlow = isHoldingWeapon ? MakeVector4(0.20F, 0.85F, 0.55F, 1.0F)
+				                                  : MakeVector4(0.25F, 0.65F, 1.0F, 1.0F);
+				DrawGlassCircle(r, btnAim.pos, btnAim.radius, btnAim.active, aimGlow, op);
+
+				Vector4 reticleCol = btnAim.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+				                                   : MakeVector4(aimGlow.x, aimGlow.y, aimGlow.z, op * 0.85F);
+				r.SetColorAlphaPremultiplied(reticleCol);
+
+				if (isHoldingWeapon) {
+					float sR = btnAim.radius * 0.42F;
+					r.DrawOutlinedCircle(btnAim.pos, sR, 1.8F);
+					r.DrawOutlinedCircle(btnAim.pos, sR * 0.5F, 1.0F);
+					r.DrawLine(btnAim.pos - MakeVector2(sR * 1.2F, 0), btnAim.pos + MakeVector2(sR * 1.2F, 0), 1.2F);
+					r.DrawLine(btnAim.pos - MakeVector2(0, sR * 1.2F), btnAim.pos + MakeVector2(0, sR * 1.2F), 1.2F);
+				} else {
+					float bS = btnAim.radius * 0.32F;
+					r.DrawOutlinedRect(btnAim.pos.x - bS, btnAim.pos.y - bS, btnAim.pos.x + bS, btnAim.pos.y + bS, 2);
 				}
 
-				r.SetColorAlphaPremultiplied(fillCol);
-				r.DrawFilledCircle(btn.pos, btn.radius);
-				r.SetColorAlphaPremultiplied(ringCol);
-				r.DrawOutlinedCircle(btn.pos, btn.radius, 2.0F);
-
-				Vector2 sz = smallFont.Measure(btn.label);
-				smallFont.DrawShadow(btn.label, btn.pos - sz * 0.5F, 1.0F,
-				                     MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.7F));
+				Vector2 sz = smallFont.Measure(btnAim.label);
+				smallFont.DrawShadow(btnAim.label, btnAim.pos + MakeVector2(-sz.x * 0.5F, btnAim.radius * 0.45F), 0.72F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
 			}
 
-			// 3. Draw Quick Weapon & Tool Slots
-			for (const auto& slot : toolSlots) {
-				Vector4 fillCol = slot.active ? MakeVector4(0.85F, 0.75F, 0.20F, op * 0.9F)
-				                              : MakeVector4(0.12F, 0.14F, 0.20F, op * 0.6F);
-				r.SetColorAlphaPremultiplied(fillCol);
-				r.DrawFilledCircle(slot.pos, slot.radius);
-				r.SetColorAlphaPremultiplied(ringCol);
-				r.DrawOutlinedCircle(slot.pos, slot.radius, 1.5F);
-
-				Vector2 sz = smallFont.Measure(slot.label);
-				smallFont.DrawShadow(slot.label, slot.pos - sz * 0.5F, 0.85F,
-				                     MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.7F));
-			}
-
-			// 4. Menu & HKS Buttons
+			// 4. Draw JUMP Button (Space)
 			{
-				Vector4 menuFill = escButton.active ? MakeVector4(0.7F, 0.2F, 0.2F, op)
-				                                    : MakeVector4(0.12F, 0.12F, 0.16F, op * 0.7F);
-				r.SetColorAlphaPremultiplied(menuFill);
-				r.DrawFilledCircle(escButton.pos, escButton.radius);
-				r.SetColorAlphaPremultiplied(ringCol);
-				r.DrawOutlinedCircle(escButton.pos, escButton.radius, 1.5F);
-				Vector2 sz = smallFont.Measure(escButton.label);
-				smallFont.DrawShadow(escButton.label, escButton.pos - sz * 0.5F, 0.9F,
-				                     MakeVector4(1, 1, 1, 1), MakeVector4(0, 0, 0, 0.7F));
+				Vector4 jumpGlow = MakeVector4(0.30F, 0.70F, 1.0F, 1.0F);
+				DrawGlassCircle(r, btnJump.pos, btnJump.radius, btnJump.active, jumpGlow, op);
 
-				Vector4 hksFill = hksButton.active ? MakeVector4(0.65F, 0.25F, 0.9F, op)
-				                                   : MakeVector4(0.20F, 0.12F, 0.28F, op * 0.7F);
-				r.SetColorAlphaPremultiplied(hksFill);
-				r.DrawFilledCircle(hksButton.pos, hksButton.radius);
-				r.SetColorAlphaPremultiplied(MakeVector4(0.85F, 0.45F, 1.0F, op * 0.85F));
-				r.DrawOutlinedCircle(hksButton.pos, hksButton.radius, 1.5F);
-				Vector2 hksSz = smallFont.Measure(hksButton.label);
-				smallFont.DrawShadow(hksButton.label, hksButton.pos - hksSz * 0.5F, 0.9F,
-				                     MakeVector4(0.95F, 0.7F, 1.0F, 1.0F), MakeVector4(0, 0, 0, 0.7F));
+				Vector4 iconCol = btnJump.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+				                                 : MakeVector4(0.4F, 0.8F, 1.0F, op * 0.9F);
+				r.SetColorAlphaPremultiplied(iconCol);
+				float aY = btnJump.pos.y - btnJump.radius * 0.20F;
+				float aW = btnJump.radius * 0.35F;
+				float aH = btnJump.radius * 0.25F;
+				r.DrawFilledTriangle(MakeVector2(btnJump.pos.x, aY - aH),
+				                     MakeVector2(btnJump.pos.x - aW, aY + aH * 0.5F),
+				                     MakeVector2(btnJump.pos.x + aW, aY + aH * 0.5F));
+
+				Vector2 sz = smallFont.Measure("JUMP");
+				smallFont.DrawShadow("JUMP", btnJump.pos + MakeVector2(-sz.x * 0.5F, btnJump.radius * 0.35F), 0.75F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+			}
+
+			// 5. Draw CROUCH Button (C)
+			{
+				Vector4 crouchGlow = MakeVector4(0.95F, 0.75F, 0.25F, 1.0F);
+				DrawGlassCircle(r, btnCrouch.pos, btnCrouch.radius, btnCrouch.active, crouchGlow, op);
+
+				Vector4 iconCol = btnCrouch.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+				                                   : MakeVector4(0.95F, 0.80F, 0.35F, op * 0.9F);
+				r.SetColorAlphaPremultiplied(iconCol);
+				float aY = btnCrouch.pos.y - btnCrouch.radius * 0.15F;
+				float aW = btnCrouch.radius * 0.32F;
+				float aH = btnCrouch.radius * 0.22F;
+				r.DrawFilledTriangle(MakeVector2(btnCrouch.pos.x, aY + aH),
+				                     MakeVector2(btnCrouch.pos.x - aW, aY - aH * 0.5F),
+				                     MakeVector2(btnCrouch.pos.x + aW, aY - aH * 0.5F));
+
+				Vector2 sz = smallFont.Measure("CROUCH");
+				smallFont.DrawShadow("CROUCH", btnCrouch.pos + MakeVector2(-sz.x * 0.5F, btnCrouch.radius * 0.32F), 0.65F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+			}
+
+			// 6. Draw RELOAD Button (R)
+			{
+				Vector4 reloadGlow = MakeVector4(0.85F, 0.45F, 1.0F, 1.0F);
+				DrawGlassCircle(r, btnReload.pos, btnReload.radius, btnReload.active, reloadGlow, op);
+
+				if (imgReload) {
+					float rSz = btnReload.radius * 1.15F;
+					Vector4 rCol = btnReload.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+					                                : MakeVector4(0.9F, 0.75F, 1.0F, op * 0.9F);
+					r.SetColorAlphaPremultiplied(rCol);
+					r.DrawImage(*imgReload, AABB2(btnReload.pos.x - rSz * 0.5F,
+					                              btnReload.pos.y - rSz * 0.5F,
+					                              rSz, rSz));
+				} else {
+					Vector2 sz = smallFont.Measure("R");
+					smallFont.DrawShadow("R", btnReload.pos - sz * 0.5F, 1.0F,
+					                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+				}
+			}
+
+			// 7. Draw Bottom Weapon / Tool Selector Bar (Cards with real weapon icons)
+			for (size_t i = 0; i < toolSlots.size(); i++) {
+				const auto& slot = toolSlots[i];
+				bool isEquipped = (static_cast<int>(i) == activeTool);
+				Vector4 glowCol = isEquipped ? MakeVector4(0.35F, 0.85F, 1.0F, 1.0F)
+				                             : MakeVector4(0.70F, 0.75F, 0.85F, 1.0F);
+
+				DrawGlassCard(r, slot.pos.x, slot.pos.y, slot.width, slot.height,
+				              slot.active, isEquipped, glowCol, op);
+
+				// Slot number in top-left
+				char numBuf[4];
+				snprintf(numBuf, sizeof(numBuf), "%d", static_cast<int>(i + 1));
+				smallFont.DrawShadow(numBuf, MakeVector2(slot.pos.x - slot.width * 0.42F, slot.pos.y - slot.height * 0.42F),
+				                     0.68F, isEquipped ? MakeVector4(0.35F, 0.85F, 1.0F, op) : MakeVector4(0.7F, 0.7F, 0.7F, op * 0.7F),
+				                     MakeVector4(0, 0, 0, op * 0.8F));
+
+				// Draw tool texture
+				Handle<IImage> toolImg;
+				if (i == 0) toolImg = imgSpade;
+				else if (i == 1) toolImg = imgBlock;
+				else if (i == 2) {
+					if (weaponType == SMG_WEAPON) toolImg = imgSMG;
+					else if (weaponType == SHOTGUN_WEAPON) toolImg = imgShotgun;
+					else toolImg = imgRifle;
+				} else if (i == 3) toolImg = imgGrenade;
+
+				if (toolImg) {
+					float imgW = toolImg->GetWidth();
+					float imgH = toolImg->GetHeight();
+					float maxDim = slot.height * 0.65F;
+					float scale = std::min(maxDim / imgH, (slot.width * 0.65F) / imgW);
+					float dw = imgW * scale;
+					float dh = imgH * scale;
+
+					Vector4 iconCol = isEquipped ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+					                             : MakeVector4(0.75F, 0.80F, 0.90F, op * 0.75F);
+					r.SetColorAlphaPremultiplied(iconCol);
+					r.DrawImage(*toolImg, AABB2(slot.pos.x - dw * 0.5F + 4.0F,
+					                            slot.pos.y - dh * 0.5F, dw, dh));
+				}
+
+				// For Block (slot 1): draw tiny held block color indicator swatch
+				if (i == 1) {
+					Vector4 colSwatch = ConvertColorRGBA(heldBlockColor);
+					colSwatch.w = op;
+					r.SetColorAlphaPremultiplied(colSwatch);
+					r.DrawFilledRect(slot.pos.x + slot.width * 0.28F, slot.pos.y - 4.0F,
+					                 slot.pos.x + slot.width * 0.42F, slot.pos.y + 4.0F);
+					r.SetColorAlphaPremultiplied(MakeVector4(1, 1, 1, op * 0.6F));
+					r.DrawOutlinedRect(slot.pos.x + slot.width * 0.28F, slot.pos.y - 4.0F,
+					                   slot.pos.x + slot.width * 0.42F, slot.pos.y + 4.0F, 1);
+				}
+			}
+
+			// 8. Draw Menu & HKS Buttons
+			{
+				// MENU
+				DrawGlassCard(r, escButton.pos.x, escButton.pos.y, escButton.width, escButton.height,
+				              escButton.active, false, MakeVector4(0.95F, 0.35F, 0.35F, 1.0F), op);
+				Vector2 mSz = smallFont.Measure("MENU");
+				smallFont.DrawShadow("MENU", escButton.pos - mSz * 0.5F, 0.80F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+
+				// HKS
+				DrawGlassCard(r, hksButton.pos.x, hksButton.pos.y, hksButton.width, hksButton.height,
+				              hksButton.active, false, MakeVector4(0.75F, 0.35F, 1.0F, 1.0F), op);
+				Vector2 hSz = smallFont.Measure("HKS");
+				smallFont.DrawShadow("HKS", hksButton.pos - hSz * 0.5F, 0.80F,
+				                     MakeVector4(0.9F, 0.65F, 1.0F, op), MakeVector4(0, 0, 0, op * 0.8F));
 			}
 		}
 
@@ -250,29 +497,41 @@ namespace spades {
 
 			Vector2 touchPos{x, y};
 
-			// Check Menu / HKS buttons
-			auto checkCircle = [&](TouchButton& btn) -> bool {
-				Vector2 d = touchPos - btn.pos;
-				if (d.x * d.x + d.y * d.y <= btn.radius * btn.radius * 1.3F) {
-					btn.active = true;
-					btn.fingerId = fingerId;
-					client.KeyEvent(btn.key, true);
-					return true;
+			// Check button helper
+			auto checkBtn = [&](TouchButton& btn) -> bool {
+				if (btn.isRect) {
+					float hx = btn.width * 0.5F + 6.0F;
+					float hy = btn.height * 0.5F + 6.0F;
+					if (touchPos.x >= btn.pos.x - hx && touchPos.x <= btn.pos.x + hx &&
+					    touchPos.y >= btn.pos.y - hy && touchPos.y <= btn.pos.y + hy) {
+						btn.active = true;
+						btn.fingerId = fingerId;
+						client.KeyEvent(btn.key, true);
+						return true;
+					}
+				} else {
+					Vector2 d = touchPos - btn.pos;
+					if (d.x * d.x + d.y * d.y <= btn.radius * btn.radius * 1.35F) {
+						btn.active = true;
+						btn.fingerId = fingerId;
+						client.KeyEvent(btn.key, true);
+						return true;
+					}
 				}
 				return false;
 			};
 
-			if (checkCircle(escButton)) return true;
-			if (checkCircle(hksButton)) return true;
-
-			// Check Action Buttons
-			for (auto& btn : buttons) {
-				if (checkCircle(btn)) return true;
-			}
+			if (checkBtn(escButton)) return true;
+			if (checkBtn(hksButton)) return true;
+			if (checkBtn(btnFire)) return true;
+			if (checkBtn(btnAim)) return true;
+			if (checkBtn(btnJump)) return true;
+			if (checkBtn(btnCrouch)) return true;
+			if (checkBtn(btnReload)) return true;
 
 			// Check Tool Slots
 			for (auto& slot : toolSlots) {
-				if (checkCircle(slot)) return true;
+				if (checkBtn(slot)) return true;
 			}
 
 			// Left screen side: Joystick
@@ -367,10 +626,11 @@ namespace spades {
 
 			if (releaseBtn(escButton)) return true;
 			if (releaseBtn(hksButton)) return true;
-
-			for (auto& btn : buttons) {
-				if (releaseBtn(btn)) return true;
-			}
+			if (releaseBtn(btnFire)) return true;
+			if (releaseBtn(btnAim)) return true;
+			if (releaseBtn(btnJump)) return true;
+			if (releaseBtn(btnCrouch)) return true;
+			if (releaseBtn(btnReload)) return true;
 
 			for (auto& slot : toolSlots) {
 				if (releaseBtn(slot)) return true;
@@ -387,24 +647,18 @@ namespace spades {
 			lookFingerId = -1;
 			ReleaseAllKeys(client);
 
-			for (auto& btn : buttons) {
-				if (btn.active) {
-					btn.active = false;
-					btn.fingerId = -1;
-					client.KeyEvent(btn.key, false);
-				}
-			}
+			btnFire.active = false; btnFire.fingerId = -1;
+			btnAim.active = false; btnAim.fingerId = -1;
+			btnJump.active = false; btnJump.fingerId = -1;
+			btnCrouch.active = false; btnCrouch.fingerId = -1;
+			btnReload.active = false; btnReload.fingerId = -1;
+			escButton.active = false; escButton.fingerId = -1;
+			hksButton.active = false; hksButton.fingerId = -1;
+
 			for (auto& slot : toolSlots) {
-				if (slot.active) {
-					slot.active = false;
-					slot.fingerId = -1;
-					client.KeyEvent(slot.key, false);
-				}
+				slot.active = false;
+				slot.fingerId = -1;
 			}
-			escButton.active = false;
-			escButton.fingerId = -1;
-			hksButton.active = false;
-			hksButton.fingerId = -1;
 		}
 
 	} // namespace client

@@ -10,6 +10,7 @@
 #include <vector>
 #include <Core/Math.h>
 #include <Core/Settings.h>
+#include <Client/IImage.h>
 
 namespace spades {
 	namespace client {
@@ -21,17 +22,19 @@ namespace spades {
 			std::string label;
 			Vector2 pos{0.0F, 0.0F};
 			float radius = 30.0F;
+			float width = 0.0F;
+			float height = 0.0F;
+			bool isRect = false;
 			bool active = false;
 			int64_t fingerId = -1;
 		};
 
 		/**
-		 * On-screen mobile touch HUD for Android:
-		 * - Virtual joystick (movement + auto-sprint)
-		 * - Touchpad camera rotation and aiming
-		 * - Fire, Build, Jump, Crouch, Reload buttons
-		 * - Quick tool switcher (1-4)
-		 * - Menu and HKS quick toggles
+		 * Tactical mobile touch HUD for Android:
+		 * - Kyro textured analog joystick with dynamic thumb knob
+		 * - Tactical combat buttons (Fire with crosshairs, Aim/ADS/Build, Jump, Crouch, Reload)
+		 * - Glassmorphic weapon & tool selector cards with active highlight
+		 * - Menu & HKS quick toggles
 		 */
 		class TouchHUD {
 		public:
@@ -52,6 +55,21 @@ namespace spades {
 			float sw = 1280.0F;
 			float sh = 720.0F;
 
+			// Textured Assets
+			bool assetsLoaded = false;
+			Handle<IImage> imgJoystick;
+			Handle<IImage> imgKnob;
+			Handle<IImage> imgReload;
+			Handle<IImage> imgArrow;
+			Handle<IImage> imgSpade;
+			Handle<IImage> imgBlock;
+			Handle<IImage> imgRifle;
+			Handle<IImage> imgSMG;
+			Handle<IImage> imgShotgun;
+			Handle<IImage> imgGrenade;
+
+			void LoadAssets(IRenderer& r);
+
 			// Virtual Joystick (Left Hand)
 			bool joystickActive = false;
 			int64_t joystickFingerId = -1;
@@ -71,9 +89,17 @@ namespace spades {
 			int64_t lookFingerId = -1;
 			Vector2 lookLastPos{0.0F, 0.0F};
 
-			// Action Buttons
-			std::vector<TouchButton> buttons;
+			// Combat Buttons (Right Hand)
+			TouchButton btnFire;
+			TouchButton btnAim;
+			TouchButton btnJump;
+			TouchButton btnCrouch;
+			TouchButton btnReload;
+
+			// Bottom Weapon / Tool Slots
 			std::vector<TouchButton> toolSlots;
+
+			// Top quick buttons
 			TouchButton escButton;
 			TouchButton hksButton;
 
