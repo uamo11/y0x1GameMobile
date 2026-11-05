@@ -5,3 +5,4 @@ libogg
 sdl2
 sdl2-image
 curl
+libiconv
