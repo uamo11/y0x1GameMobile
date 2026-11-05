@@ -475,6 +475,25 @@ namespace spades {
 		runner.RunProtected();
 	}
 
+	void StartLocalWorld(const std::string& mapPath) {
+		class LocalWorldRunner : public spades::gui::Runner {
+			std::string mapPath;
+		protected:
+			spades::gui::View* CreateView(spades::client::IRenderer* renderer,
+			                              spades::client::IAudioDevice* audio) override {
+				auto fontManager = Handle<client::FontManager>::New(renderer);
+				auto innerView = Handle<client::Client>::New(
+				    renderer, audio, ServerAddress(), fontManager, "", mapPath);
+				return new spades::gui::ConsoleScreen(renderer, audio, fontManager,
+				                                      std::move(innerView).Cast<gui::View>());
+			}
+		public:
+			LocalWorldRunner(const std::string& path) : mapPath(path) {}
+		};
+		LocalWorldRunner runner(mapPath);
+		runner.RunProtected();
+	}
+
 	void StartMainScreen() {
 		class ConcreteRunner : public spades::gui::Runner {
 		protected:
@@ -1063,22 +1082,7 @@ int main(int argc, char** argv) {
 				mapPath = "Maps/" + mapPath;
 			}
 			SPLog("Starting local world: %s", mapPath.c_str());
-			class LocalWorldRunner : public spades::gui::Runner {
-				std::string mapPath;
-			protected:
-				spades::gui::View* CreateView(spades::client::IRenderer* renderer,
-				                              spades::client::IAudioDevice* audio) override {
-					auto fontManager = Handle<client::FontManager>::New(renderer);
-					auto innerView = Handle<client::Client>::New(
-					    renderer, audio, ServerAddress(), fontManager, "", mapPath);
-					return new spades::gui::ConsoleScreen(renderer, audio, fontManager,
-					                                      std::move(innerView).Cast<gui::View>());
-				}
-			public:
-				LocalWorldRunner(const std::string& path) : mapPath(path) {}
-			};
-			LocalWorldRunner runner(mapPath);
-			runner.RunProtected();
+			spades::StartLocalWorld(mapPath);
 		} else if (g_setup) {
 			splashWindow.reset();
 
