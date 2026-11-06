@@ -40,6 +40,7 @@ namespace spades {
 
 			void OnBackToGame(gui::ui::UIElement& sender);
 			void OnSetup(gui::ui::UIElement& sender);
+			void OnMods(gui::ui::UIElement& sender);
 			void OnChatLog(gui::ui::UIElement& sender);
 			void OnDisconnect(gui::ui::UIElement& sender);
 

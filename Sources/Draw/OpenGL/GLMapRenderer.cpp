@@ -116,13 +116,14 @@ namespace spades {
 			}
 		}
 
-		static const int MapMaxDrawDist = 192;
+		static const int MapMaxDrawDist = 256;
 
 		void GLMapRenderer::RealizeChunks(spades::Vector3 eye) {
 			SPADES_MARK_FUNCTION();
 
-			float cullDistance = static_cast<float>(MapMaxDrawDist);
-			float releaseDistance = cullDistance + 32.0F;
+			// Use diagonal distance (MapMaxDrawDist * 1.45F) so chunks at the corners of the square draw box are never clipped
+			float cullDistance = static_cast<float>(MapMaxDrawDist) * 1.45F;
+			float releaseDistance = cullDistance + 48.0F;
 			for (int i = 0; i < numChunks; i++) {
 				float dist = chunks[i]->DistanceFromEye(eye);
 				chunkInfos[i].distance = dist;

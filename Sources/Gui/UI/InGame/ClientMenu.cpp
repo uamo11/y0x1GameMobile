@@ -134,8 +134,8 @@ namespace spades {
 			float cardPadY = isSpectator ? 8.0F : 12.0F;
 #endif
 
-			// winH encompasses title header + 4 buttons + spacing
-			float winH = headerH + 2.0F + (btnH + spacing) * 3.0F + btnH;
+			// winH encompasses title header + 5 buttons + spacing
+			float winH = headerH + 2.0F + (btnH + spacing) * 4.0F + btnH;
 			float winX = isSpectator ? 16.0F : (sw - winW) * 0.5F;
 			float winY = isSpectator ? 16.0F : (sh - winH) * 0.5F;
 
@@ -202,7 +202,18 @@ namespace spades {
 			}
 			curBtnY += btnH + spacing;
 
-			// 4. Disconnect (Exit Door icon)
+			// 4. Mods / OpenManager (Insert)
+			{
+				Handle<InGameMenuButton> button = Handle<InGameMenuButton>::New(
+				    manager, gui::GuiIconType::Settings, MakeVector4(1.0F, 0.75F, 0.20F, 1.0F));
+				button->caption = _Tr("Client", "Mods (Insert)");
+				button->SetBounds(AABB2(winX, curBtnY, winW, btnH));
+				button->activated = [this](UIElement& s) { OnMods(s); };
+				AddChild(button.GetPointerOrNull());
+			}
+			curBtnY += btnH + spacing;
+
+			// 5. Disconnect (Exit Door icon)
 			{
 				Handle<InGameMenuButton> button = Handle<InGameMenuButton>::New(
 				    manager, gui::GuiIconType::Disconnect, MakeVector4(0.95F, 0.35F, 0.35F, 1.0F));
@@ -215,6 +226,8 @@ namespace spades {
 		}
 
 		void ClientMenu::OnBackToGame(UIElement&) { ui->SetActiveUI(nullptr); }
+
+		void ClientMenu::OnMods(UIElement&) { ui->EnterHksMenu(); }
 
 		void ClientMenu::OnSetup(UIElement&) {
 			PreferenceViewOptions opt;

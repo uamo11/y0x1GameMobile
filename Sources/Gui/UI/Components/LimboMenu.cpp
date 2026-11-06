@@ -266,7 +266,11 @@ namespace spades {
 			const float left = cachedLayout.left;
 			const float top = cachedLayout.top;
 			const float contentsWidth = cachedLayout.contentsWidth;
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			const float height = 215.0F;
+#else
 			const float height = 140.0F;
+#endif
 
 			const int selectedTeam = host->GetSelectedTeam();
 			const WeaponType selectedWeapon = host->GetSelectedWeapon();
@@ -320,15 +324,38 @@ namespace spades {
 				}
 
 				Vector4 fillColor = MakeVector4(0.2F, 0.2F, 0.2F, 0.5F);
-				if (selected)
-					fillColor = MakeVector4(0.7F, 0.7F, 0.7F, 1) * 0.9F;
-				else if (item.hover)
-					fillColor = MakeVector4(0.4F, 0.4F, 0.4F, 1) * 0.7F;
+				Vector4 borderColor = MakeVector4(0.0F, 0.0F, 0.0F, 0.8F);
+
+				if (item.type == MenuItemType::Team1) {
+					fillColor = selected ? MakeVector4(0.15F, 0.40F, 0.85F, 0.90F) : (item.hover ? MakeVector4(0.12F, 0.30F, 0.65F, 0.75F) : MakeVector4(0.08F, 0.18F, 0.45F, 0.60F));
+					borderColor = selected ? MakeVector4(0.50F, 0.80F, 1.0F, 0.95F) : MakeVector4(0.10F, 0.20F, 0.50F, 0.80F);
+				} else if (item.type == MenuItemType::Team2) {
+					fillColor = selected ? MakeVector4(0.18F, 0.70F, 0.25F, 0.90F) : (item.hover ? MakeVector4(0.14F, 0.52F, 0.20F, 0.75F) : MakeVector4(0.10F, 0.32F, 0.14F, 0.60F));
+					borderColor = selected ? MakeVector4(0.50F, 1.0F, 0.60F, 0.95F) : MakeVector4(0.12F, 0.45F, 0.18F, 0.80F);
+				} else if (item.type == MenuItemType::TeamSpectator) {
+					fillColor = selected ? MakeVector4(0.50F, 0.50F, 0.55F, 0.90F) : (item.hover ? MakeVector4(0.35F, 0.35F, 0.40F, 0.75F) : MakeVector4(0.18F, 0.18F, 0.22F, 0.60F));
+					borderColor = selected ? MakeVector4(0.90F, 0.90F, 0.95F, 0.95F) : MakeVector4(0.25F, 0.25F, 0.30F, 0.80F);
+				} else if (item.type == MenuItemType::WeaponRifle || item.type == MenuItemType::WeaponSMG || item.type == MenuItemType::WeaponShotgun) {
+					fillColor = selected ? MakeVector4(0.90F, 0.65F, 0.15F, 0.90F) : (item.hover ? MakeVector4(0.40F, 0.40F, 0.40F, 0.75F) : MakeVector4(0.16F, 0.16F, 0.18F, 0.60F));
+					borderColor = selected ? MakeVector4(1.0F, 0.85F, 0.40F, 0.95F) : MakeVector4(0.30F, 0.30F, 0.35F, 0.80F);
+				} else if (item.type == MenuItemType::Spawn) {
+					fillColor = item.hover ? MakeVector4(0.20F, 0.80F, 0.35F, 0.95F) : MakeVector4(0.14F, 0.60F, 0.25F, 0.85F);
+					borderColor = MakeVector4(0.50F, 1.0F, 0.65F, 0.95F);
+				} else if (item.type == MenuItemType::Close) {
+					fillColor = item.hover ? MakeVector4(0.85F, 0.20F, 0.20F, 0.95F) : MakeVector4(0.60F, 0.15F, 0.15F, 0.85F);
+					borderColor = MakeVector4(1.0F, 0.45F, 0.45F, 0.95F);
+				} else {
+					if (selected)
+						fillColor = MakeVector4(0.7F, 0.7F, 0.7F, 1) * 0.9F;
+					else if (item.hover)
+						fillColor = MakeVector4(0.4F, 0.4F, 0.4F, 1) * 0.7F;
+					borderColor = fillColor * 0.8F;
+				}
 
 				renderer->SetColorAlphaPremultiplied(fillColor);
 				renderer->DrawImage(nullptr, item.rect);
 
-				renderer->SetColorAlphaPremultiplied(fillColor * 0.8F);
+				renderer->SetColorAlphaPremultiplied(borderColor);
 				renderer->DrawOutlinedRect(item.rect.GetMinX(), item.rect.GetMinY(),
 										   item.rect.GetMaxX(), item.rect.GetMaxY());
 

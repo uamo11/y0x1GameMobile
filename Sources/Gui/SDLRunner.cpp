@@ -555,6 +555,7 @@ namespace spades {
 			SDL_Init(SDL_INIT_VIDEO);
 #if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
 			SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+			SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeLeft LandscapeRight");
 #endif
 
 			try {
@@ -591,6 +592,9 @@ namespace spades {
 					case RendererType::SW: sdlFlags = 0; break;
 				}
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+				sdlFlags |= SDL_WINDOW_FULLSCREEN;
+#else
 				if (!m_hasSystemMenu) {
 					if (r_fullscreen) {
 						sdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -609,6 +613,7 @@ namespace spades {
 						sdlFlags |= SDL_WINDOW_BORDERLESS;
 #endif
 				}
+#endif
 
 				SDL_Window* window = SDL_CreateWindow(caption.c_str(),
 					SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,

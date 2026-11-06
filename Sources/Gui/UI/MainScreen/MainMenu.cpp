@@ -453,12 +453,13 @@ namespace spades {
 					    Handle<MenuIconButton>::New(manager, GuiIconType::Connect, false);
 					connectButton = button.GetPointerOrNull();
 					connectButton->caption = _Tr("MainScreen", "Conectar");
-					connectButton->hotKeyText = _Tr("Client", "[Enter]");
 #if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+					connectButton->hotKeyText = "";
 					connectButton->SetBounds(
-					    AABB2(contentsLeft + 42.0F, actionBarY, 130.0F, actionBarHeight));
+					    AABB2(contentsLeft + 42.0F, actionBarY, 135.0F, actionBarHeight));
 					connectButton->visible = true;
 #else
+					connectButton->hotKeyText = _Tr("Client", "[Enter]");
 					connectButton->SetBounds(
 					    AABB2(contentsLeft + contentsWidth - 290.0F, actionBarY, 140.0F, actionBarHeight));
 					connectButton->visible = false;

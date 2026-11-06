@@ -30,6 +30,12 @@ public class ySpadesActivity extends SDLActivity {
     }
 
     @Override
+    public void setOrientationBis(int w, int h, boolean resizable, String hint) {
+        // Enforce widescreen landscape on Android regardless of device auto-rotate lock
+        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         hideSystemUI();
