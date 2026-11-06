@@ -90,21 +90,33 @@ namespace spades {
 			cachedLayout.screenWidth = renderer->ScreenWidth();
 			cachedLayout.screenHeight = renderer->ScreenHeight();
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			cachedLayout.menuWidth = 240.0F;
+			cachedLayout.menuHeight = 46.0F;
+			cachedLayout.rowHeight = 52.0F;
+			cachedLayout.contentsWidth = cachedLayout.screenWidth - 16.0F;
+			float maxContentsWidth = 900.0F;
+			if (cachedLayout.contentsWidth > maxContentsWidth)
+				cachedLayout.contentsWidth = maxContentsWidth;
+			cachedLayout.left = (cachedLayout.screenWidth - cachedLayout.contentsWidth) * 0.5F;
+			cachedLayout.top = cachedLayout.screenHeight - 225.0F;
+			cachedLayout.teamX = cachedLayout.left + 16.0F;
+			cachedLayout.weapX = cachedLayout.left + 280.0F;
+			cachedLayout.firstY = cachedLayout.top + 45.0F;
+#else
 			cachedLayout.menuWidth = 200.0F;
 			cachedLayout.menuHeight = cachedLayout.menuWidth / 8.0F;
 			cachedLayout.rowHeight = cachedLayout.menuHeight + 3.0F;
-
 			cachedLayout.contentsWidth = cachedLayout.screenWidth - 8.0F;
 			float maxContentsWidth = 800.0F;
 			if (cachedLayout.contentsWidth > maxContentsWidth)
 				cachedLayout.contentsWidth = maxContentsWidth;
-
 			cachedLayout.left = (cachedLayout.screenWidth - cachedLayout.contentsWidth) * 0.5F;
 			cachedLayout.top = cachedLayout.screenHeight - 150.0F;
-
 			cachedLayout.teamX = cachedLayout.left + 10.0F;
 			cachedLayout.weapX = cachedLayout.left + 260.0F;
 			cachedLayout.firstY = cachedLayout.top + 35.0F;
+#endif
 
 			cachedLayout.isValid = true;
 		}
@@ -160,10 +172,18 @@ namespace spades {
 						item.rect = AABB2(cachedLayout.weapX, cachedLayout.firstY + cachedLayout.rowHeight * 2.0F, cachedLayout.menuWidth, cachedLayout.menuHeight);
 						break;
 					case MenuItemType::Spawn:
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+						item.rect = AABB2(cachedLayout.left + cachedLayout.contentsWidth - 190.0F, cachedLayout.firstY + 4.0F, 180.0F, 96.0F);
+#else
 						item.rect = AABB2(cachedLayout.left + cachedLayout.contentsWidth - 166.0F, cachedLayout.firstY + 4.0F, 156.0F, 64.0F);
+#endif
 						break;
 					case MenuItemType::Close:
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+						item.rect = AABB2(cachedLayout.left + cachedLayout.contentsWidth - 44.0F, cachedLayout.top, 44.0F, 44.0F);
+#else
 						item.rect = AABB2(cachedLayout.left + cachedLayout.contentsWidth - 24.0F, cachedLayout.top, 24.0F, 24.0F);
+#endif
 						break;
 				}
 			}
@@ -176,7 +196,7 @@ namespace spades {
 			if (!down)
 				return false;
 
-			if (key == "LeftMouseButton") {
+			if (key == "LeftMouseButton" || key == "LButton") {
 				// Clicks arrive during event dispatch, ahead of the frame's Update, so
 				// a resize or an earlier click in the same batch could otherwise be
 				// hit-tested against rects and visibility that no longer hold.

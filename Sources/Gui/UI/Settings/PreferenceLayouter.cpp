@@ -39,6 +39,16 @@ namespace spades {
 		using ui::UIElement;
 		using ui::UIManager;
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+		constexpr float PrefRowHeight = 48.0F;
+		constexpr float PrefControlHeight = 36.0F;
+		constexpr float PrefControlY = 6.0F;
+#else
+		constexpr float PrefRowHeight = 32.0F;
+		constexpr float PrefControlHeight = 26.0F;
+		constexpr float PrefControlY = 3.0F;
+#endif
+
 		StandardPreferenceLayouter::StandardPreferenceLayouter(UIElement* parent,
 		                                                       client::FontManager* fontManager)
 		    : parent(parent), fontManager(fontManager) {
@@ -87,7 +97,7 @@ namespace spades {
 
 		UIElement* StandardPreferenceLayouter::CreateItem() {
 			Handle<UIElement> elem = Handle<UIElement>::New(&parent->GetManager());
-			elem->size = MakeVector2(fieldWidth, 32.0F);
+			elem->size = MakeVector2(fieldWidth, PrefRowHeight);
 			items.push_back(elem);
 			return elem.GetPointerOrNull();
 		}
@@ -99,7 +109,7 @@ namespace spades {
 			Handle<Label> label = Handle<Label>::New(&parent->GetManager());
 			label->text = caption;
 			label->alignment = MakeVector2(0.0F, 0.5F);
-			label->SetBounds(AABB2(listX, 0.0F, listWidth, 32.0F));
+			label->SetBounds(AABB2(listX, 0.0F, listWidth, PrefRowHeight));
 			label->enable = enabled;
 			container->AddChild(label.GetPointerOrNull());
 
@@ -121,7 +131,7 @@ namespace spades {
 			label->SetFont(&fontManager->GetHeadingFont());
 			label->text = text;
 			label->alignment = MakeVector2(0.5F, 0.5F);
-			label->SetBounds(AABB2(listX, 0.0F, listWidth, 32.0F));
+			label->SetBounds(AABB2(listX, 0.0F, listWidth, PrefRowHeight));
 			container->AddChild(label.GetPointerOrNull());
 		}
 
@@ -133,7 +143,7 @@ namespace spades {
 			Handle<ConfigField> field = Handle<ConfigField>::New(&parent->GetManager(), configName);
 			if (compact)
 				field->SetFont(&fontManager->GetSmallFont());
-			field->SetBounds(AABB2(fieldX, 2.0F, fieldWidth, compact ? 20.0F : 28.0F));
+			field->SetBounds(AABB2(fieldX, PrefControlY, fieldWidth, compact ? 22.0F : PrefControlHeight));
 			field->enable = enabled;
 			container->AddChild(field.GetPointerOrNull());
 
@@ -149,7 +159,7 @@ namespace spades {
 
 			Handle<ConfigSlider> slider = Handle<ConfigSlider>::New(
 			    &parent->GetManager(), configName, minRange, maxRange, step, std::move(formatter));
-			slider->SetBounds(AABB2(fieldX, 4.0F, fieldWidth, 24.0F));
+			slider->SetBounds(AABB2(fieldX, PrefControlY, fieldWidth, PrefControlHeight));
 			slider->enable = enabled;
 			container->AddChild(slider.GetPointerOrNull());
 
@@ -170,7 +180,7 @@ namespace spades {
 				    Handle<ConfigSlider>::New(&parent->GetManager(), labels[i], minRange, maxRange,
 				                              step, NumberFormatter(digits, "", prefix[i]));
 				slider->SetBounds(
-				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), 4.0F, width, 24.0F));
+				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), PrefControlY, width, PrefControlHeight));
 				slider->enable = enabled;
 				container->AddChild(slider.GetPointerOrNull());
 			}
@@ -193,7 +203,7 @@ namespace spades {
 
 			Handle<ConfigHotKeyField> field =
 			    Handle<ConfigHotKeyField>::New(&parent->GetManager(), configName);
-			field->SetBounds(AABB2(fieldX, 2.0F, fieldWidth, 28.0F));
+			field->SetBounds(AABB2(fieldX, PrefControlY, fieldWidth, PrefControlHeight));
 			field->enable = enabled;
 			container->AddChild(field.GetPointerOrNull());
 
@@ -213,7 +223,7 @@ namespace spades {
 				Handle<ConfigSimpleToggleButton> field = Handle<ConfigSimpleToggleButton>::New(
 				    &parent->GetManager(), labels[i], configName, values[i]);
 				field->SetBounds(
-				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), 2.0F, width, 28.0F));
+				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), PrefControlY, width, PrefControlHeight));
 				field->enable = enabled;
 				container->AddChild(field.GetPointerOrNull());
 			}
@@ -231,7 +241,7 @@ namespace spades {
 				    Handle<ConfigSimpleToggleStringButton>::New(&parent->GetManager(), labels[i],
 				                                                configName, values[i]);
 				field->SetBounds(
-				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), 2.0F, width, 28.0F));
+				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), PrefControlY, width, PrefControlHeight));
 				field->enable = enabled;
 				container->AddChild(field.GetPointerOrNull());
 			}
@@ -249,7 +259,7 @@ namespace spades {
 				    Handle<ViewmodelPositionPresetButton>::New(&parent->GetManager(), labels[i],
 				                                               caption, xs[i], ys[i], zs[i]);
 				button->SetBounds(
-				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), 2.0F, width, 28.0F));
+				    AABB2(fieldX + static_cast<float>(i) * (width + 1.0F), PrefControlY, width, PrefControlHeight));
 				button->enable = enabled;
 				container->AddChild(button.GetPointerOrNull());
 			}
@@ -258,10 +268,10 @@ namespace spades {
 		void StandardPreferenceLayouter::AddToggleField(const std::string& caption,
 		                                                const std::string& configName, bool enabled) {
 			UIElement* container = CreateBasicLabel(caption, enabled);
-			float switchW = 124.0F;
+			float switchW = 150.0F;
 			Handle<ConfigSwitchButton> sw =
 			    Handle<ConfigSwitchButton>::New(&parent->GetManager(), configName);
-			sw->SetBounds(AABB2(fieldX, 3.0F, switchW, 26.0F));
+			sw->SetBounds(AABB2(fieldX, PrefControlY, switchW, PrefControlHeight));
 			sw->enable = enabled;
 			container->AddChild(sw.GetPointerOrNull());
 		}
@@ -282,7 +292,7 @@ namespace spades {
 
 			Handle<SimpleButton> button = Handle<SimpleButton>::New(&parent->GetManager());
 			button->caption = btnCaption;
-			button->SetBounds(AABB2(fieldX, 4.0F, fieldWidth, 24.0F));
+			button->SetBounds(AABB2(fieldX, PrefControlY, fieldWidth, PrefControlHeight));
 			button->enable = enabled;
 			button->activated = std::move(handler);
 			container->AddChild(button.GetPointerOrNull());
@@ -408,7 +418,7 @@ namespace spades {
 			Handle<StandardPreferenceLayouterModel> model =
 			    Handle<StandardPreferenceLayouterModel>::New(items);
 			list->SetModel(model.GetPointerOrNull());
-			list->rowHeight = 32.0F;
+			list->rowHeight = PrefRowHeight;
 			list->SetBounds(AABB2(listX, 0.0F, listWidth + 30.0F, fieldHeight - 6.0F));
 			parent->AddChild(list.GetPointerOrNull());
 

@@ -58,11 +58,11 @@ namespace spades {
 			UIManager::~UIManager() {}
 
 			MouseButton UIManager::TranslateMouseButton(const std::string& key) {
-				if (key == "LeftMouseButton")
+				if (key == "LeftMouseButton" || key == "LButton")
 					return MouseButton::Left;
-				else if (key == "RightMouseButton")
+				else if (key == "RightMouseButton" || key == "RButton")
 					return MouseButton::Right;
-				else if (key == "MiddleMouseButton")
+				else if (key == "MiddleMouseButton" || key == "MButton")
 					return MouseButton::Middle;
 				else if (key == "MouseButton4")
 					return MouseButton::Button4;

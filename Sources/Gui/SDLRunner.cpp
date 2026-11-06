@@ -183,7 +183,12 @@ namespace spades {
 					if (s_activeWindow) SDL_GetWindowSize(s_activeWindow, &winW, &winH);
 					float fx = event.tfinger.x * static_cast<float>(winW);
 					float fy = event.tfinger.y * static_cast<float>(winH);
-					view.TouchFingerDown(fx, fy, event.tfinger.fingerId);
+					if (!view.TouchFingerDown(fx, fy, event.tfinger.fingerId)) {
+						if (view.NeedsAbsoluteMouseCoordinate()) {
+							view.MouseEvent(fx, fy);
+							view.KeyEvent("LeftMouseButton", true);
+						}
+					}
 					break;
 				}
 				case SDL_FINGERUP: {
@@ -191,7 +196,12 @@ namespace spades {
 					if (s_activeWindow) SDL_GetWindowSize(s_activeWindow, &winW, &winH);
 					float fx = event.tfinger.x * static_cast<float>(winW);
 					float fy = event.tfinger.y * static_cast<float>(winH);
-					view.TouchFingerUp(fx, fy, event.tfinger.fingerId);
+					if (!view.TouchFingerUp(fx, fy, event.tfinger.fingerId)) {
+						if (view.NeedsAbsoluteMouseCoordinate()) {
+							view.MouseEvent(fx, fy);
+							view.KeyEvent("LeftMouseButton", false);
+						}
+					}
 					break;
 				}
 				case SDL_FINGERMOTION: {
@@ -201,7 +211,11 @@ namespace spades {
 					float fy = event.tfinger.y * static_cast<float>(winH);
 					float fdx = event.tfinger.dx * static_cast<float>(winW);
 					float fdy = event.tfinger.dy * static_cast<float>(winH);
-					view.TouchFingerMotion(fx, fy, fdx, fdy, event.tfinger.fingerId);
+					if (!view.TouchFingerMotion(fx, fy, fdx, fdy, event.tfinger.fingerId)) {
+						if (view.NeedsAbsoluteMouseCoordinate()) {
+							view.MouseEvent(fx, fy);
+						}
+					}
 					break;
 				}
 				case SDL_KEYDOWN:
@@ -539,6 +553,9 @@ namespace spades {
 			SPADES_MARK_FUNCTION();
 
 			SDL_Init(SDL_INIT_VIDEO);
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+#endif
 
 			try {
 				std::string caption;

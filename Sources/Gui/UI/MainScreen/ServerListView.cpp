@@ -56,7 +56,8 @@ namespace spades {
 			float scaleF = std::min(GetManager().screenWidth / maxContentsWidth, 1.0F);
 
 			float itemOffsetX = 2.0F;
-			float itemOffsetY = 2.0F;
+			std::string displayName = item->IsGold() ? ("[★] " + item->GetName()) : item->GetName();
+			float itemOffsetY = std::max(2.0F, (sz.y - font->Measure(displayName).y) * 0.5F);
 			float flagIconOffsetX = (itemOffsetX + 12.0F) * scaleF;
 			float nameOffsetX = (itemOffsetX + 24.0F) * scaleF;
 			float slotsOffsetX = 335.0F * scaleF;
@@ -101,7 +102,7 @@ namespace spades {
 			// Draw server country flag icon
 			SetColorNP(r, col);
 			flagIconRenderer->DrawIcon(
-			    item->GetCountry(), pos + MakeVector2(flagIconOffsetX, itemOffsetY + (sz.y * 0.5F)));
+			    item->GetCountry(), pos + MakeVector2(flagIconOffsetX, sz.y * 0.5F));
 
 			// Draw server name
 			std::string displayName = item->IsGold() ? ("[★] " + item->GetName()) : item->GetName();

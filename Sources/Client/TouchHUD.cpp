@@ -105,63 +105,71 @@ namespace spades {
 			sh = screenHeight;
 
 			// Left joystick centered at bottom-left
-			joystickCenter = MakeVector2(sw * 0.12F, sh * 0.74F);
-			joystickBaseRadius = std::min(sw, sh) * 0.15F;
-			joystickKnobRadius = joystickBaseRadius * 0.42F;
+			joystickCenter = MakeVector2(sw * 0.13F, sh * 0.72F);
+			joystickBaseRadius = std::min(sw, sh) * 0.16F;
+			joystickKnobRadius = joystickBaseRadius * 0.44F;
 			if (!joystickActive) {
 				joystickCurrent = joystickCenter;
 			}
 
-			// Right Hand Action Buttons
-			float rFire = std::min(sw, sh) * 0.082F;    // Primary large button
-			float rAction = std::min(sw, sh) * 0.068F;  // Secondary medium button
-			float rSmall = std::min(sw, sh) * 0.055F;   // Utility small button
+			// Right Hand Action Buttons (Mobile Competitive FPS standard)
+			float rFire = std::min(sw, sh) * 0.088F;    // Primary large button (~58px)
+			float rAction = std::min(sw, sh) * 0.072F;  // Secondary medium button (~48px)
+			float rSmall = std::min(sw, sh) * 0.060F;   // Utility small button (~40px)
+			float rChat = std::min(sw, sh) * 0.052F;    // Quick chat button (~35px)
 
-			// 1. Primary Trigger: FIRE (LButton)
-			btnFire.key = "LButton";
+			// 1. Primary Trigger: FIRE (LeftMouseButton)
+			btnFire.key = "LeftMouseButton";
 			btnFire.label = "FIRE";
-			btnFire.pos = MakeVector2(sw - rFire * 1.55F, sh - rFire * 2.15F);
+			btnFire.pos = MakeVector2(sw - 135.0F, sh - 150.0F);
 			btnFire.radius = rFire;
 			btnFire.isRect = false;
 
-			// 2. Secondary Action: AIM / SCOPE / BUILD (RButton)
-			btnAim.key = "RButton";
+			// 2. Secondary Action: AIM / SCOPE / BUILD (RightMouseButton)
+			btnAim.key = "RightMouseButton";
 			btnAim.label = "AIM";
-			btnAim.pos = MakeVector2(sw - rFire * 3.35F, sh - rFire * 1.65F);
+			btnAim.pos = MakeVector2(sw - 255.0F, sh - 155.0F);
 			btnAim.radius = rAction;
 			btnAim.isRect = false;
 
 			// 3. Mobility: JUMP (Space)
 			btnJump.key = "Space";
 			btnJump.label = "JUMP";
-			btnJump.pos = MakeVector2(sw - rFire * 1.35F, sh - rFire * 3.85F);
+			btnJump.pos = MakeVector2(sw - 135.0F, sh - 275.0F);
 			btnJump.radius = rAction;
 			btnJump.isRect = false;
 
-			// 4. Stance: CROUCH (C)
-			btnCrouch.key = "C";
+			// 4. Stance: CROUCH (Control)
+			btnCrouch.key = "Control";
 			btnCrouch.label = "CROUCH";
-			btnCrouch.pos = MakeVector2(sw - rFire * 3.05F, sh - rFire * 3.15F);
+			btnCrouch.pos = MakeVector2(sw - 250.0F, sh - 275.0F);
 			btnCrouch.radius = rSmall;
 			btnCrouch.isRect = false;
 
-			// 5. Utility: RELOAD (R)
-			btnReload.key = "R";
+			// 5. Utility: RELOAD (r)
+			btnReload.key = "r";
 			btnReload.label = "RELOAD";
-			btnReload.pos = MakeVector2(sw - rFire * 2.2F, sh - rFire * 4.65F);
+			btnReload.pos = MakeVector2(sw - 135.0F, sh - 390.0F);
 			btnReload.radius = rSmall;
 			btnReload.isRect = false;
+
+			// 6. Quick Chat: CHAT (t)
+			btnChat.key = "t";
+			btnChat.label = "CHAT";
+			btnChat.pos = MakeVector2(sw - 245.0F, sh - 390.0F);
+			btnChat.radius = rChat;
+			btnChat.isRect = false;
 
 			// Bottom Weapon / Tool Slots
 			toolSlots.clear();
 			const char* toolKeys[4] = {"1", "2", "3", "4"};
 			const char* toolNames[4] = {"1:PALA", "2:BLOQUE", "3:ARMA", "4:GRANADA"};
-			float cardW = std::min(sw, sh) * 0.12F;
-			float cardH = std::min(sw, sh) * 0.075F;
-			float spacing = 8.0F;
+			float cardW = 86.0F;
+			float cardH = 54.0F;
+			float spacing = 10.0F;
 			float totalW = 4.0F * cardW + 3.0F * spacing;
 			float startX = (sw - totalW) * 0.5F + cardW * 0.5F;
-			float slotY = sh - cardH * 0.65F - 4.0F;
+			float slotY = sh - cardH * 0.55F - 6.0F;
 
 			for (int i = 0; i < 4; i++) {
 				TouchButton slot;
@@ -175,22 +183,30 @@ namespace spades {
 				toolSlots.push_back(slot);
 			}
 
-			// Top Buttons: Menu (ESC) & HKS Menu (Insert)
+			// Top Buttons: Menu (ESC), HKS Menu (Insert), Scoreboard (Tab)
 			escButton.key = "Escape";
 			escButton.label = "PAUSA";
-			escButton.pos = MakeVector2(80.0F, 85.0F);
-			escButton.width = 90.0F;
-			escButton.height = 36.0F;
+			escButton.pos = MakeVector2(75.0F, 85.0F);
+			escButton.width = 95.0F;
+			escButton.height = 38.0F;
 			escButton.radius = 28.0F;
 			escButton.isRect = true;
 
 			hksButton.key = "Insert";
 			hksButton.label = "MODS (Insert)";
-			hksButton.pos = MakeVector2(220.0F, 85.0F);
-			hksButton.width = 150.0F;
-			hksButton.height = 36.0F;
+			hksButton.pos = MakeVector2(225.0F, 85.0F);
+			hksButton.width = 160.0F;
+			hksButton.height = 38.0F;
 			hksButton.radius = 24.0F;
 			hksButton.isRect = true;
+
+			btnScore.key = "Tab";
+			btnScore.label = "TAB";
+			btnScore.pos = MakeVector2(sw - 60.0F, 85.0F);
+			btnScore.width = 80.0F;
+			btnScore.height = 38.0F;
+			btnScore.radius = 24.0F;
+			btnScore.isRect = true;
 		}
 
 		void TouchHUD::Draw(IRenderer& r, Client& client) {
@@ -380,6 +396,28 @@ namespace spades {
 				}
 			}
 
+			// Draw CHAT Button (t)
+			{
+				Vector4 chatGlow = MakeVector4(0.25F, 0.75F, 1.0F, 1.0F);
+				DrawGlassCircle(r, btnChat.pos, btnChat.radius, btnChat.active, chatGlow, op);
+				Vector4 iconCol = btnChat.active ? MakeVector4(1.0F, 1.0F, 1.0F, op)
+				                                 : MakeVector4(0.40F, 0.85F, 1.0F, op * 0.9F);
+				r.SetColorAlphaPremultiplied(iconCol);
+
+				float cW = btnChat.radius * 0.40F;
+				float cH = btnChat.radius * 0.28F;
+				r.DrawOutlinedRect(btnChat.pos.x - cW, btnChat.pos.y - cH - 2.0F,
+				                   btnChat.pos.x + cW, btnChat.pos.y + cH - 2.0F, 1.5F);
+				r.DrawLine(MakeVector2(btnChat.pos.x - cW * 0.5F, btnChat.pos.y + cH - 2.0F),
+				           MakeVector2(btnChat.pos.x - cW * 0.2F, btnChat.pos.y + cH + 3.0F), 1.5F);
+				r.DrawLine(MakeVector2(btnChat.pos.x - cW * 0.2F, btnChat.pos.y + cH + 3.0F),
+				           MakeVector2(btnChat.pos.x, btnChat.pos.y + cH - 2.0F), 1.5F);
+
+				Vector2 sz = smallFont.Measure("CHAT");
+				smallFont.DrawShadow("CHAT", btnChat.pos + MakeVector2(-sz.x * 0.5F, btnChat.radius * 0.35F), 0.65F,
+				                     MakeVector4(1, 1, 1, op), MakeVector4(0, 0, 0, op * 0.8F));
+			}
+
 			// 7. Draw Bottom Weapon / Tool Selector Bar (Cards with real weapon icons)
 			for (size_t i = 0; i < toolSlots.size(); i++) {
 				const auto& slot = toolSlots[i];
@@ -450,14 +488,21 @@ namespace spades {
 				Vector2 hSz = smallFont.Measure(hksButton.label);
 				smallFont.DrawShadow(hksButton.label, hksButton.pos - hSz * 0.5F, 0.78F,
 				                     MakeVector4(1.0F, 0.90F, 0.40F, op), MakeVector4(0, 0, 0, op * 0.8F));
+
+				// TAB (Scoreboard)
+				DrawGlassCard(r, btnScore.pos.x, btnScore.pos.y, btnScore.width, btnScore.height,
+				              btnScore.active, false, MakeVector4(0.70F, 0.45F, 1.0F, 1.0F), op);
+				Vector2 sSz = smallFont.Measure(btnScore.label);
+				smallFont.DrawShadow(btnScore.label, btnScore.pos - sSz * 0.5F, 0.78F,
+				                     MakeVector4(0.85F, 0.80F, 1.0F, op), MakeVector4(0, 0, 0, op * 0.8F));
 			}
 		}
 
 		void TouchHUD::UpdateJoystickKeys(Client& client) {
 			Vector2 diff = joystickCurrent - joystickCenter;
 			float len = std::sqrt(diff.x * diff.x + diff.y * diff.y);
-			float deadzone = joystickBaseRadius * 0.20F;
-			float sprintDist = joystickBaseRadius * 0.85F;
+			float deadzone = joystickBaseRadius * 0.18F;
+			float sprintDist = joystickBaseRadius * 0.82F;
 
 			bool wantW = false;
 			bool wantS = false;
@@ -476,19 +521,39 @@ namespace spades {
 				if (len >= sprintDist) wantShift = true;
 			}
 
-			if (wantW != keyW) { keyW = wantW; client.KeyEvent("Up", keyW); }
-			if (wantS != keyS) { keyS = wantS; client.KeyEvent("Down", keyS); }
-			if (wantA != keyA) { keyA = wantA; client.KeyEvent("Left", keyA); }
-			if (wantD != keyD) { keyD = wantD; client.KeyEvent("Right", keyD); }
-			if (wantShift != keyShift) { keyShift = wantShift; client.KeyEvent("LeftShift", keyShift); }
+			if (wantW != keyW) {
+				keyW = wantW;
+				client.KeyEvent("w", keyW);
+				client.KeyEvent("Up", keyW);
+			}
+			if (wantS != keyS) {
+				keyS = wantS;
+				client.KeyEvent("s", keyS);
+				client.KeyEvent("Down", keyS);
+			}
+			if (wantA != keyA) {
+				keyA = wantA;
+				client.KeyEvent("a", keyA);
+				client.KeyEvent("Left", keyA);
+			}
+			if (wantD != keyD) {
+				keyD = wantD;
+				client.KeyEvent("d", keyD);
+				client.KeyEvent("Right", keyD);
+			}
+			if (wantShift != keyShift) {
+				keyShift = wantShift;
+				client.KeyEvent("Shift", keyShift);
+				client.KeyEvent("LeftShift", keyShift);
+			}
 		}
 
 		void TouchHUD::ReleaseAllKeys(Client& client) {
-			if (keyW) { keyW = false; client.KeyEvent("Up", false); }
-			if (keyS) { keyS = false; client.KeyEvent("Down", false); }
-			if (keyA) { keyA = false; client.KeyEvent("Left", false); }
-			if (keyD) { keyD = false; client.KeyEvent("Right", false); }
-			if (keyShift) { keyShift = false; client.KeyEvent("LeftShift", false); }
+			if (keyW) { keyW = false; client.KeyEvent("w", false); client.KeyEvent("Up", false); }
+			if (keyS) { keyS = false; client.KeyEvent("s", false); client.KeyEvent("Down", false); }
+			if (keyA) { keyA = false; client.KeyEvent("a", false); client.KeyEvent("Left", false); }
+			if (keyD) { keyD = false; client.KeyEvent("d", false); client.KeyEvent("Right", false); }
+			if (keyShift) { keyShift = false; client.KeyEvent("Shift", false); client.KeyEvent("LeftShift", false); }
 		}
 
 		bool TouchHUD::HandleFingerDown(float x, float y, int64_t fingerId, Client& client) {
@@ -500,13 +565,16 @@ namespace spades {
 			// Check button helper
 			auto checkBtn = [&](TouchButton& btn) -> bool {
 				if (btn.isRect) {
-					float hx = btn.width * 0.5F + 6.0F;
-					float hy = btn.height * 0.5F + 6.0F;
+					float hx = btn.width * 0.5F + 8.0F;
+					float hy = btn.height * 0.5F + 8.0F;
 					if (touchPos.x >= btn.pos.x - hx && touchPos.x <= btn.pos.x + hx &&
 					    touchPos.y >= btn.pos.y - hy && touchPos.y <= btn.pos.y + hy) {
 						btn.active = true;
 						btn.fingerId = fingerId;
 						client.KeyEvent(btn.key, true);
+						if (btn.key == "LeftMouseButton") client.KeyEvent("LButton", true);
+						if (btn.key == "RightMouseButton") client.KeyEvent("RButton", true);
+						if (btn.key == "Control") client.KeyEvent("c", true);
 						return true;
 					}
 				} else {
@@ -515,6 +583,9 @@ namespace spades {
 						btn.active = true;
 						btn.fingerId = fingerId;
 						client.KeyEvent(btn.key, true);
+						if (btn.key == "LeftMouseButton") client.KeyEvent("LButton", true);
+						if (btn.key == "RightMouseButton") client.KeyEvent("RButton", true);
+						if (btn.key == "Control") client.KeyEvent("c", true);
 						return true;
 					}
 				}
@@ -523,11 +594,13 @@ namespace spades {
 
 			if (checkBtn(escButton)) return true;
 			if (checkBtn(hksButton)) return true;
+			if (checkBtn(btnScore)) return true;
 			if (checkBtn(btnFire)) return true;
 			if (checkBtn(btnAim)) return true;
 			if (checkBtn(btnJump)) return true;
 			if (checkBtn(btnCrouch)) return true;
 			if (checkBtn(btnReload)) return true;
+			if (checkBtn(btnChat)) return true;
 
 			// Check Tool Slots
 			for (auto& slot : toolSlots) {
@@ -619,6 +692,9 @@ namespace spades {
 					btn.active = false;
 					btn.fingerId = -1;
 					client.KeyEvent(btn.key, false);
+					if (btn.key == "LeftMouseButton") client.KeyEvent("LButton", false);
+					if (btn.key == "RightMouseButton") client.KeyEvent("RButton", false);
+					if (btn.key == "Control") client.KeyEvent("c", false);
 					return true;
 				}
 				return false;
@@ -626,11 +702,13 @@ namespace spades {
 
 			if (releaseBtn(escButton)) return true;
 			if (releaseBtn(hksButton)) return true;
+			if (releaseBtn(btnScore)) return true;
 			if (releaseBtn(btnFire)) return true;
 			if (releaseBtn(btnAim)) return true;
 			if (releaseBtn(btnJump)) return true;
 			if (releaseBtn(btnCrouch)) return true;
 			if (releaseBtn(btnReload)) return true;
+			if (releaseBtn(btnChat)) return true;
 
 			for (auto& slot : toolSlots) {
 				if (releaseBtn(slot)) return true;
@@ -652,6 +730,8 @@ namespace spades {
 			btnJump.active = false; btnJump.fingerId = -1;
 			btnCrouch.active = false; btnCrouch.fingerId = -1;
 			btnReload.active = false; btnReload.fingerId = -1;
+			btnChat.active = false; btnChat.fingerId = -1;
+			btnScore.active = false; btnScore.fingerId = -1;
 			escButton.active = false; escButton.fingerId = -1;
 			hksButton.active = false; hksButton.fingerId = -1;
 

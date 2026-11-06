@@ -171,7 +171,11 @@ namespace spades {
 			contentsRight = contentsLeft + contentsWidth;
 
 			tabWidth = PreferenceMetrics::tabWidth;
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			tabRowHeight = 46.0F;
+#else
 			tabRowHeight = 30.0F;
+#endif
 			tabTop = contentsTop + 2.0F;
 			tabLeft = contentsLeft + PreferenceMetrics::tabInset;
 			tabRight = tabLeft + tabWidth;

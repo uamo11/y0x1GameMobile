@@ -118,12 +118,21 @@ namespace spades {
 
 			bool isSpectator = ui->IsLocalPlayerSpectator();
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			float winW = isSpectator ? 220.0F : 320.0F;
+			float btnH = isSpectator ? 36.0F : 48.0F;
+			float spacing = 10.0F;
+			float headerH = isSpectator ? 32.0F : 42.0F;
+			float cardPadX = 18.0F;
+			float cardPadY = 16.0F;
+#else
 			float winW = isSpectator ? 170.0F : 240.0F;
 			float btnH = isSpectator ? 25.0F : 34.0F;
 			float spacing = isSpectator ? 4.0F : 6.0F;
 			float headerH = isSpectator ? 24.0F : 34.0F;
 			float cardPadX = isSpectator ? 8.0F : 14.0F;
 			float cardPadY = isSpectator ? 8.0F : 12.0F;
+#endif
 
 			// winH encompasses title header + 4 buttons + spacing
 			float winH = headerH + 2.0F + (btnH + spacing) * 3.0F + btnH;

@@ -56,8 +56,13 @@ namespace spades {
 				ScrollBar* scrollBar; // weak; owned as a child
 
 			public:
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+				float rowHeight = 36.0F;
+				float scrollBarWidth = 32.0F;
+#else
 				float rowHeight = 24.0F;
 				float scrollBarWidth = 16.0F;
+#endif
 
 				/** When true, the rows are anchored to the bottom edge instead of the top one. */
 				bool bottomAligned = false;

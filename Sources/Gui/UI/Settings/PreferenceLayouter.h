@@ -40,9 +40,15 @@ namespace spades {
 
 		/** Geometry shared by `PreferenceView` and `StandardPreferenceLayouter`. */
 		struct PreferenceMetrics {
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			static constexpr float maxContentsWidth = 1400.0F;
+			static constexpr float tabWidth = 180.0F;
+			static constexpr float tabInset = 2.0F;
+#else
 			static constexpr float maxContentsWidth = 980.0F;
 			static constexpr float tabWidth = 150.0F;
 			static constexpr float tabInset = 2.0F;
+#endif
 
 			/** Width of a tab's content panel for the given screen width. */
 			static float GetPanelWidth(float screenWidth) {

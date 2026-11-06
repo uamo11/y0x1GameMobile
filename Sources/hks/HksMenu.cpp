@@ -58,6 +58,12 @@ namespace spades {
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			float contentsWidth = sw - 24.0F;
+			contentsHeight = sh - 16.0F;
+			tabWidth = 200.0F;
+			tabRowHeight = 46.0F;
+#else
 			float contentsWidth = sw - 16.0F;
 			if (contentsWidth > PreferenceMetrics::maxContentsWidth)
 				contentsWidth = PreferenceMetrics::maxContentsWidth;
@@ -66,12 +72,14 @@ namespace spades {
 			if (contentsHeight > 550.0F)
 				contentsHeight = 550.0F;
 
+			tabWidth = PreferenceMetrics::tabWidth;
+			tabRowHeight = 30.0F;
+#endif
+
 			float contentsTop = (sh - contentsHeight) * 0.5F;
 			float contentsLeft = (sw - contentsWidth) * 0.5F;
 			contentsRight = contentsLeft + contentsWidth;
 
-			tabWidth = PreferenceMetrics::tabWidth;
-			tabRowHeight = 30.0F;
 			tabTop = contentsTop + 48.0F;
 			tabLeft = contentsLeft + PreferenceMetrics::tabInset;
 

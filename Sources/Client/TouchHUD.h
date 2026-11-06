@@ -95,6 +95,7 @@ namespace spades {
 			TouchButton btnJump;
 			TouchButton btnCrouch;
 			TouchButton btnReload;
+			TouchButton btnChat;
 
 			// Bottom Weapon / Tool Slots
 			std::vector<TouchButton> toolSlots;
@@ -102,6 +103,7 @@ namespace spades {
 			// Top quick buttons
 			TouchButton escButton;
 			TouchButton hksButton;
+			TouchButton btnScore;
 
 			void UpdateJoystickKeys(Client& client);
 			void ReleaseAllKeys(Client& client);

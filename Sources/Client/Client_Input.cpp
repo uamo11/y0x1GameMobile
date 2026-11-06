@@ -418,6 +418,27 @@ namespace spades {
 			if (cfg.empty())
 				return false;
 
+			if (EqualsIgnoringCase(cfg, input))
+				return true;
+
+			// Mobile touch & alternative key aliases
+			if (EqualsIgnoringCase(cfg, "LeftMouseButton") && (EqualsIgnoringCase(input, "LButton") || EqualsIgnoringCase(input, "LeftMouseButton")))
+				return true;
+			if (EqualsIgnoringCase(cfg, "RightMouseButton") && (EqualsIgnoringCase(input, "RButton") || EqualsIgnoringCase(input, "RightMouseButton")))
+				return true;
+			if (EqualsIgnoringCase(cfg, "Control") && EqualsIgnoringCase(input, "c"))
+				return true;
+			if (EqualsIgnoringCase(cfg, "w") && EqualsIgnoringCase(input, "Up"))
+				return true;
+			if (EqualsIgnoringCase(cfg, "s") && EqualsIgnoringCase(input, "Down"))
+				return true;
+			if (EqualsIgnoringCase(cfg, "a") && EqualsIgnoringCase(input, "Left"))
+				return true;
+			if (EqualsIgnoringCase(cfg, "d") && EqualsIgnoringCase(input, "Right"))
+				return true;
+			if (EqualsIgnoringCase(cfg, "Shift") && (EqualsIgnoringCase(input, "LeftShift") || EqualsIgnoringCase(input, "RightShift")))
+				return true;
+
 			static const std::string space1("space");
 			static const std::string space2("spacebar");
 			static const std::string space3("spacekey");
@@ -425,10 +446,7 @@ namespace spades {
 			if (EqualsIgnoringCase(cfg, space1) ||
 				EqualsIgnoringCase(cfg, space2) ||
 				EqualsIgnoringCase(cfg, space3)) {
-				if (input == " ")
-					return true;
-			} else {
-				if (EqualsIgnoringCase(cfg, input))
+				if (input == " " || EqualsIgnoringCase(input, "Space"))
 					return true;
 			}
 			return false;
@@ -1291,6 +1309,10 @@ namespace spades {
 		}
 
 		bool Client::TouchFingerDown(float x, float y, int64_t fingerId) {
+			if (scriptedUI->NeedsInput() || IsLimboViewActive() || gui::ConsoleScreen::IsConsoleOpen() || !world) {
+				touchHUD.Reset(*this);
+				return false;
+			}
 			if (world && TouchHUD::IsEnabled()) {
 				return touchHUD.HandleFingerDown(x, y, fingerId, *this);
 			}
@@ -1298,6 +1320,9 @@ namespace spades {
 		}
 
 		bool Client::TouchFingerUp(float x, float y, int64_t fingerId) {
+			if (scriptedUI->NeedsInput() || IsLimboViewActive() || gui::ConsoleScreen::IsConsoleOpen() || !world) {
+				return false;
+			}
 			if (world && TouchHUD::IsEnabled()) {
 				return touchHUD.HandleFingerUp(x, y, fingerId, *this);
 			}
@@ -1305,6 +1330,9 @@ namespace spades {
 		}
 
 		bool Client::TouchFingerMotion(float x, float y, float dx, float dy, int64_t fingerId) {
+			if (scriptedUI->NeedsInput() || IsLimboViewActive() || gui::ConsoleScreen::IsConsoleOpen() || !world) {
+				return false;
+			}
 			if (world && TouchHUD::IsEnabled()) {
 				return touchHUD.HandleFingerMotion(x, y, dx, dy, fingerId, *this);
 			}
