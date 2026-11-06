@@ -105,7 +105,6 @@ namespace spades {
 			    item->GetCountry(), pos + MakeVector2(flagIconOffsetX, sz.y * 0.5F));
 
 			// Draw server name
-			std::string displayName = item->IsGold() ? ("[★] " + item->GetName()) : item->GetName();
 			font->Draw(displayName, pos + MakeVector2(nameOffsetX, itemOffsetY), 1.0F, fgcolor);
 
 			// Draw server slots
