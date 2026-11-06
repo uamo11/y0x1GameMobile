@@ -19,6 +19,7 @@
  */
 
 #include "ButtonBase.h"
+#include "ListView.h"
 #include <Gui/UI/Framework/UIManager.h>
 
 namespace spades {
@@ -63,6 +64,9 @@ namespace spades {
 				if (button != MouseButton::Left && button != MouseButton::Right)
 					return;
 
+				dragStartY = clientPosition.y;
+				isDraggingList = false;
+
 				PlayActivateSound();
 				if (button == MouseButton::Right) {
 					OnRightClicked();
@@ -83,6 +87,27 @@ namespace spades {
 
 			void ButtonBase::MouseMove(Vector2 clientPosition) {
 				if (pressed) {
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+					float dy = clientPosition.y - dragStartY;
+					if (!isDraggingList && std::abs(dy) > 12.0F) {
+						ListViewBase* lv = dynamic_cast<ListViewBase*>(GetParent());
+						if (lv) {
+							isDraggingList = true;
+							hover = false;
+							if (repeat)
+								repeatTimer->Stop();
+						}
+					}
+					if (isDraggingList) {
+						ListViewBase* lv = dynamic_cast<ListViewBase*>(GetParent());
+						if (lv && lv->rowHeight > 0.0F) {
+							float rowDelta = -dy / lv->rowHeight;
+							lv->MouseWheel(rowDelta);
+							dragStartY = clientPosition.y;
+							return;
+						}
+					}
+#endif
 					bool newHover = AABB2(MakeVector2(0, 0), size).Contains(clientPosition);
 					if (newHover != hover) {
 						if (repeat) {
@@ -106,15 +131,28 @@ namespace spades {
 
 				if (pressed) {
 					pressed = false;
+					if (isDraggingList) {
+						isDraggingList = false;
+						hover = false;
+						return;
+					}
+
 					if (hover && !(repeat || activateOnMouseDown)) {
 						hover = false;
 						if (toggle)
 							toggled = !toggled;
 						OnActivated();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+						if (GetManager().time - lastActivate < 0.55F &&
+						    (clientPosition - lastActivatePosition).GetManhattanLength() < 40.0F) {
+							OnDoubleClicked();
+						}
+#else
 						if (GetManager().time - lastActivate < 0.35F &&
 						    (clientPosition - lastActivatePosition).GetManhattanLength() < 10.0F) {
 							OnDoubleClicked();
 						}
+#endif
 
 						lastActivate = GetManager().time;
 						lastActivatePosition = clientPosition;

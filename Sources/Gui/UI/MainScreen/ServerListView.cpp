@@ -52,18 +52,17 @@ namespace spades {
 			Vector2 sz = size;
 
 			// adjust based on screen width
-			float maxContentsWidth = 750.0F;
-			float scaleF = std::min(GetManager().screenWidth / maxContentsWidth, 1.0F);
+			float colScale = sz.x / 750.0F;
 
 			float itemOffsetX = 2.0F;
 			std::string displayName = item->IsGold() ? ("[★] " + item->GetName()) : item->GetName();
 			float itemOffsetY = std::max(2.0F, (sz.y - font->Measure(displayName).y) * 0.5F);
-			float flagIconOffsetX = (itemOffsetX + 12.0F) * scaleF;
-			float nameOffsetX = (itemOffsetX + 24.0F) * scaleF;
-			float slotsOffsetX = 335.0F * scaleF;
-			float mapNameOffsetX = 372.0F * scaleF;
-			float gameModeOffsetX = 580.0F * scaleF;
-			float protocolOffsetX = 658.0F * scaleF;
+			float flagIconOffsetX = itemOffsetX + 12.0F;
+			float nameOffsetX = itemOffsetX + 28.0F;
+			float slotsOffsetX = 310.0F * colScale;
+			float mapNameOffsetX = 380.0F * colScale;
+			float gameModeOffsetX = 540.0F * colScale;
+			float protocolOffsetX = 650.0F * colScale;
 			float pingOffsetX = sz.x - itemOffsetX;
 
 			Vector4 bgcolor = MakeVector4(1.0F, 1.0F, 1.0F, 0.0F);

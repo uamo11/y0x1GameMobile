@@ -84,9 +84,17 @@ namespace spades {
 				    Handle<SimpleTabStripItem>::New(&GetManager(), linkedElement);
 				item->caption = title;
 				client::IFont* font = GetFont();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+				float tabH = 38.0F;
+				float w = (font ? font->Measure(title).x : 0.0F) + 32.0F;
+				item->SetBounds(AABB2(nextX, 0.0F, w, tabH));
+				nextX += w + 8.0F;
+#else
+				float tabH = 24.0F;
 				float w = (font ? font->Measure(title).x : 0.0F) + 18.0F;
-				item->SetBounds(AABB2(nextX, 0.0F, w, 24.0F));
+				item->SetBounds(AABB2(nextX, 0.0F, w, tabH));
 				nextX += w + 4.0F;
+#endif
 
 				item->activated = [this](UIElement& sender) { OnItemActivated(sender); };
 
@@ -101,7 +109,7 @@ namespace spades {
 				Vector2 sz = size;
 
 				SetColorNP(r, MakeVector4(0.9F, 0.9F, 0.9F, 1.0F));
-				r.DrawImage(nullptr, AABB2(pos.x, pos.y + 24.0F, sz.x, 1.0F));
+				r.DrawImage(nullptr, AABB2(pos.x, pos.y + sz.y, sz.x, 1.0F));
 			}
 		} // namespace ui
 	} // namespace gui

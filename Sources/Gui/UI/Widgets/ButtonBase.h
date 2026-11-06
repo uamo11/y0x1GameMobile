@@ -40,6 +40,10 @@ namespace spades {
 				float lastActivate = -1.0F;
 				Vector2 lastActivatePosition;
 
+				// for touch dragging in list views
+				float dragStartY = 0.0F;
+				bool isDraggingList = false;
+
 			public:
 				bool pressed = false;
 				bool hover = false;

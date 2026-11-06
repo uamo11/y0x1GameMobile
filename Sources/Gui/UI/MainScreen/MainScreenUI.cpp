@@ -628,7 +628,15 @@ namespace spades {
 			// draw title logo
 			Handle<client::IImage> img = renderer->RegisterImage("Gfx/Title/Logo.png");
 			ui::SetColorNP(*renderer, MakeVector4(1.0F, 1.0F, 1.0F, 1.0F));
-			renderer->DrawImage(img, MakeVector2((sw - img->GetWidth()) * 0.5F, 64.0F));
+			if (img) {
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+				float logoW = std::min(static_cast<float>(img->GetWidth()), 340.0F);
+				float logoH = logoW * (static_cast<float>(img->GetHeight()) / static_cast<float>(img->GetWidth()));
+				renderer->DrawImage(img, AABB2((sw - logoW) * 0.5F, 16.0F, logoW, logoH));
+#else
+				renderer->DrawImage(img, MakeVector2((sw - img->GetWidth()) * 0.5F, 64.0F));
+#endif
+			}
 
 			// The check answers asynchronously; announce a new release once, as soon
 			// as the menu is free of other dialogs.

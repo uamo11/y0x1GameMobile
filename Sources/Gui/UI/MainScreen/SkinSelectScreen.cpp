@@ -200,6 +200,19 @@ namespace spades {
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			float dlgW = std::min(580.0F, sw * 0.60F);
+			float dlgH = std::min(580.0F, sh - 20.0F);
+			float dlgX = 24.0F;
+			float dlgY = (sh - dlgH) * 0.5F;
+
+			float sidebarW = 160.0F;
+			float tabH = 42.0F;
+			float tabGap = 4.0F;
+			float btnH = 38.0F;
+			float btnGap = 6.0F;
+			float rowH = 46.0F;
+#else
 			float dlgW = std::min(480.0F, sw * 0.48F);
 			float dlgH = std::min(550.0F, sh - 32.0F);
 			float dlgX = 24.0F;
@@ -208,6 +221,10 @@ namespace spades {
 			float sidebarW = 135.0F;
 			float tabH = 34.0F;
 			float tabGap = 3.0F;
+			float btnH = 30.0F;
+			float btnGap = 4.0F;
+			float rowH = 40.0F;
+#endif
 
 			// --- 1. Sidebar Tabs ---
 			{
@@ -237,8 +254,6 @@ namespace spades {
 			}
 
 			// --- 2. Sidebar Action Buttons (Bottom) ---
-			float btnH = 30.0F;
-			float btnGap = 4.0F;
 			float bottomY = dlgY + dlgH - 12.0F;
 
 			{
@@ -272,7 +287,6 @@ namespace spades {
 			float contentW = dlgW - sidebarW - 20.0F;
 			float contentH = dlgH - 58.0F;
 
-			float rowH = 40.0F;
 			float rowGap = 4.0F;
 
 			// A. Skins Panel

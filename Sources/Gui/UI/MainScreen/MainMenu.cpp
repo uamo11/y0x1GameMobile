@@ -361,26 +361,48 @@ namespace spades {
 			float sw = manager->screenWidth;
 			float sh = manager->screenHeight;
 
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			float contentsWidth = sw - 32.0F;
+			float maxContentsWidth = 1050.0F;
+#else
 			float contentsWidth = sw - 16.0F;
 			float maxContentsWidth = 750.0F;
+#endif
 			if (contentsWidth > maxContentsWidth)
 				contentsWidth = maxContentsWidth;
 			demoContentsWidth = contentsWidth;
 
 			float contentsLeft = (sw - contentsWidth) * 0.5F;
 			float footerPos = sh - 50.0F;
+
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			float actionBarY = 118.0F;
+			float actionBarHeight = 36.0F;
+			float tabStripPos = 162.0F;
+			float tabStripHeight = 38.0F;
+			float headerPos = 204.0F;
+			float headerHeight = 28.0F;
+			float footerBtnW = 130.0F;
+			float footerBtnH = 38.0F;
+#else
+			float actionBarY = 200.0F;
+			float actionBarHeight = 30.0F;
 			float tabStripPos = 232.0F;
+			float tabStripHeight = 24.0F;
 			float headerPos = 260.0F;
 			float headerHeight = 24.0F;
+			float footerBtnW = 110.0F;
+			float footerBtnH = 30.0F;
+#endif
 			float listPos = headerPos + headerHeight;
 
 			// adjust based on screen width
-			float scaleF = std::min(sw / maxContentsWidth, 1.0F);
-			float slotsOffsetX = 300.0F * scaleF;
-			float mapNameOffsetX = 370.0F * scaleF;
-			float gameModeOffsetX = 520.0F * scaleF;
-			float protocolOffsetX = 640.0F * scaleF;
-			float pingOffsetX = 680.0F * scaleF;
+			float colScale = contentsWidth / 750.0F;
+			float slotsOffsetX = 310.0F * colScale;
+			float mapNameOffsetX = 380.0F * colScale;
+			float gameModeOffsetX = 540.0F * colScale;
+			float protocolOffsetX = 650.0F * colScale;
+			float pingOffsetX = contentsWidth - 55.0F;
 
 			// --- Tab strip (always visible) ---
 			{
@@ -410,7 +432,7 @@ namespace spades {
 					    Handle<MenuIconButton>::New(manager, GuiIconType::AddServer, true);
 					toggleIpButton = button.GetPointerOrNull();
 					toggleIpButton->toggle = true;
-					toggleIpButton->SetBounds(AABB2(contentsLeft, 200.0F, 34.0F, 30.0F));
+					toggleIpButton->SetBounds(AABB2(contentsLeft, actionBarY, 36.0F, actionBarHeight));
 					toggleIpButton->activated = [this](UIElement&) {
 						showDirectConnect = !showDirectConnect;
 						if (toggleIpButton) {
@@ -425,12 +447,55 @@ namespace spades {
 					serverPanel->AddChild(toggleIpButton);
 				}
 
+				// Connect button (ALWAYS VISIBLE on mobile, next to IP toggle!)
+				{
+					Handle<MenuIconButton> button =
+					    Handle<MenuIconButton>::New(manager, GuiIconType::Connect, false);
+					connectButton = button.GetPointerOrNull();
+					connectButton->caption = _Tr("MainScreen", "Conectar");
+					connectButton->hotKeyText = _Tr("Client", "[Enter]");
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+					connectButton->SetBounds(
+					    AABB2(contentsLeft + 42.0F, actionBarY, 130.0F, actionBarHeight));
+					connectButton->visible = true;
+#else
+					connectButton->SetBounds(
+					    AABB2(contentsLeft + contentsWidth - 290.0F, actionBarY, 140.0F, actionBarHeight));
+					connectButton->visible = false;
+#endif
+					connectButton->activated = [this](UIElement&) { Connect(); };
+					serverPanel->AddChild(connectButton);
+				}
+
+				// Direct IP address field (hidden until deployed!)
+				{
+					Handle<Field> field = Handle<Field>::New(manager);
+					addressField = field.GetPointerOrNull();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+					addressField->SetBounds(
+					    AABB2(contentsLeft + 178.0F, actionBarY, contentsWidth - 425.0F, actionBarHeight));
+#else
+					addressField->SetBounds(
+					    AABB2(contentsLeft + 40.0F, actionBarY, contentsWidth - 335.0F, actionBarHeight));
+#endif
+					addressField->placeholder = _Tr("MainScreen", "IP del Servidor (ej. 127.0.0.1:32887)");
+					addressField->SetText(cg_lastQuickConnectHost);
+					addressField->changed = [this](UIElement& s) { OnAddressChanged(s); };
+					addressField->visible = false;
+					serverPanel->AddChild(addressField);
+				}
+
 				// Gold season / Most played server event notice
 				{
 					Handle<Label> label = Handle<Label>::New(manager);
 					goldNoticeLabel = label.GetPointerOrNull();
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
 					goldNoticeLabel->SetBounds(
-					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 235.0F, 30.0F));
+					    AABB2(contentsLeft + 178.0F, actionBarY, contentsWidth - 425.0F, actionBarHeight));
+#else
+					goldNoticeLabel->SetBounds(
+					    AABB2(contentsLeft + 40.0F, actionBarY, contentsWidth - 235.0F, actionBarHeight));
+#endif
 					goldNoticeLabel->alignment = MakeVector2(0.0F, 0.5F);
 					goldNoticeLabel->backgroundColor = MakeVector4(0.18F, 0.14F, 0.04F, 0.65F);
 					goldNoticeLabel->outlineColor = MakeVector4(0.85F, 0.70F, 0.20F, 0.60F);
@@ -443,33 +508,6 @@ namespace spades {
 					serverPanel->AddChild(goldNoticeLabel);
 				}
 
-				// Direct IP address field (hidden until deployed!)
-				{
-					Handle<Field> field = Handle<Field>::New(manager);
-					addressField = field.GetPointerOrNull();
-					addressField->SetBounds(
-					    AABB2(contentsLeft + 40.0F, 200.0F, contentsWidth - 335.0F, 30.0F));
-					addressField->placeholder = _Tr("MainScreen", "IP del Servidor (ej. 127.0.0.1:32887)");
-					addressField->SetText(cg_lastQuickConnectHost);
-					addressField->changed = [this](UIElement& s) { OnAddressChanged(s); };
-					addressField->visible = false;
-					serverPanel->AddChild(addressField);
-				}
-
-				// Connect button (hidden until deployed!)
-				{
-					Handle<MenuIconButton> button =
-					    Handle<MenuIconButton>::New(manager, GuiIconType::Connect, false);
-					connectButton = button.GetPointerOrNull();
-					connectButton->caption = _Tr("MainScreen", "Conectar");
-					connectButton->hotKeyText = _Tr("Client", "[Enter]");
-					connectButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 290.0F, 200.0F, 140.0F, 30.0F));
-					connectButton->activated = [this](UIElement&) { Connect(); };
-					connectButton->visible = false;
-					serverPanel->AddChild(connectButton);
-				}
-
 				// Search filter button (toggles filter bar on touch)
 				{
 					Handle<MenuIconButton> button =
@@ -478,7 +516,7 @@ namespace spades {
 					searchFilterButton->toggle = true;
 					searchFilterButton->toggled = false;
 					searchFilterButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 190.0F, 200.0F, 34.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 236.0F, actionBarY, 36.0F, actionBarHeight));
 					searchFilterButton->activated = [this](UIElement&) {
 						showSearchFilter = !showSearchFilter;
 						UpdateSearchFilterVisibility();
@@ -493,7 +531,7 @@ namespace spades {
 				{
 					Handle<RefreshButton> button = Handle<RefreshButton>::New(manager);
 					button->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 150.0F, 200.0F, 30.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 194.0F, actionBarY, 36.0F, actionBarHeight));
 					button->activated = [this](UIElement&) { LoadServerList(); };
 					serverPanel->AddChild(button.GetPointerOrNull());
 				}
@@ -503,7 +541,7 @@ namespace spades {
 					Handle<Button> button = Handle<Button>::New(manager);
 					versionFilterButton = button.GetPointerOrNull();
 					versionFilterButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 115.0F, 200.0F, 115.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 152.0F, actionBarY, 152.0F, actionBarHeight));
 					versionFilterButton->caption = _Tr("MainScreen", "Todos");
 					versionFilterButton->activated = [this](UIElement&) { OpenVersionDropdown(); };
 					serverPanel->AddChild(versionFilterButton);
@@ -624,13 +662,13 @@ namespace spades {
 					titleLabel->text = _Tr("MainScreen", "MUNDOS GUARDADOS (.VXL)");
 					titleLabel->textColor = MakeVector4(0.95F, 0.95F, 1.0F, 1.0F);
 					titleLabel->alignment = MakeVector2(0.0F, 0.5F);
-					titleLabel->SetBounds(AABB2(contentsLeft, 200.0F, 240.0F, 30.0F));
+					titleLabel->SetBounds(AABB2(contentsLeft, actionBarY, 240.0F, actionBarHeight));
 					worldsPanel->AddChild(titleLabel.GetPointerOrNull());
 
 					Handle<Button> openFolderBtn = Handle<Button>::New(manager);
 					openFolderBtn->caption = _Tr("MainScreen", "Abrir Carpeta");
 					openFolderBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 310.0F, 200.0F, 140.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 310.0F, actionBarY, 140.0F, actionBarHeight));
 					openFolderBtn->activated = [](UIElement&) {
 #ifdef _WIN32
 						ShowDirectoryInShell("Resources\\Maps");
@@ -644,7 +682,7 @@ namespace spades {
 					playWorldBtn->caption = _Tr("MainScreen", "Entrar al Mundo");
 					playWorldBtn->hotKeyText = _Tr("Client", "[Enter]");
 					playWorldBtn->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 160.0F, 200.0F, 160.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 160.0F, actionBarY, 160.0F, actionBarHeight));
 					playWorldBtn->activated = [this](UIElement&) { PlaySelectedWorld(); };
 					worldsPanel->AddChild(playWorldBtn.GetPointerOrNull());
 
@@ -672,7 +710,7 @@ namespace spades {
 					Handle<Field> field = Handle<Field>::New(manager);
 					demoNameField = field.GetPointerOrNull();
 					demoNameField->SetBounds(
-					    AABB2(contentsLeft, 200.0F, contentsWidth - 320.0F, 30.0F));
+					    AABB2(contentsLeft, actionBarY, contentsWidth - 330.0F, actionBarHeight));
 					demoNameField->placeholder = _Tr("MainScreen", "Select a demo");
 					demoNameField->acceptsFocus = false;
 					demoNameField->isMouseInteractive = false;
@@ -683,7 +721,7 @@ namespace spades {
 					demoDeleteButton = button.GetPointerOrNull();
 					demoDeleteButton->caption = _Tr("MainScreen", "Delete");
 					demoDeleteButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 320.0F, 200.0F, 80.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 320.0F, actionBarY, 80.0F, actionBarHeight));
 					demoDeleteButton->activated = [this](UIElement& s) { OnDeleteDemoPressed(s); };
 					demoPanel->AddChild(demoDeleteButton);
 				}
@@ -692,7 +730,7 @@ namespace spades {
 					demoRenameButton = button.GetPointerOrNull();
 					demoRenameButton->caption = _Tr("MainScreen", "Rename");
 					demoRenameButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 240.0F, 200.0F, 90.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 235.0F, actionBarY, 90.0F, actionBarHeight));
 					demoRenameButton->activated = [this](UIElement& s) { OnRenameDemoPressed(s); };
 					demoPanel->AddChild(demoRenameButton);
 				}
@@ -702,7 +740,7 @@ namespace spades {
 					demoPlayButton->caption = _Tr("MainScreen", "Play");
 					demoPlayButton->hotKeyText = _Tr("Client", "[Enter]");
 					demoPlayButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 150.0F, 200.0F, 150.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 140.0F, actionBarY, 140.0F, actionBarHeight));
 					demoPlayButton->activated = [this](UIElement& s) { OnPlayDemoPressed(s); };
 					demoPanel->AddChild(demoPlayButton);
 				}
@@ -761,7 +799,7 @@ namespace spades {
 					Handle<Button> button = Handle<Button>::New(manager);
 					modsDownloadButton = button.GetPointerOrNull();
 					modsDownloadButton->caption = _Tr("MainScreen", "Download official mods...");
-					modsDownloadButton->SetBounds(AABB2(contentsLeft, 200.0F, 240.0F, 30.0F));
+					modsDownloadButton->SetBounds(AABB2(contentsLeft, actionBarY, 240.0F, actionBarHeight));
 					modsDownloadButton->activated = [this](UIElement& s) {
 						OnDownloadModsPressed(s);
 					};
@@ -772,7 +810,7 @@ namespace spades {
 					modsResetButton = button.GetPointerOrNull();
 					modsResetButton->caption = _Tr("MainScreen", "Disable all");
 					modsResetButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 300.0F, 200.0F, 130.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 300.0F, actionBarY, 130.0F, actionBarHeight));
 					modsResetButton->activated = [this](UIElement& s) { OnResetModsPressed(s); };
 					modsPanel->AddChild(modsResetButton);
 				}
@@ -781,7 +819,7 @@ namespace spades {
 					modsApplyButton = button.GetPointerOrNull();
 					modsApplyButton->caption = _Tr("MainScreen", "Apply changes");
 					modsApplyButton->SetBounds(
-					    AABB2(contentsLeft + contentsWidth - 160.0F, 200.0F, 160.0F, 30.0F));
+					    AABB2(contentsLeft + contentsWidth - 160.0F, actionBarY, 160.0F, actionBarHeight));
 					modsApplyButton->activated = [this](UIElement& s) { OnApplyModsPressed(s); };
 					modsPanel->AddChild(modsApplyButton);
 				}
@@ -861,7 +899,7 @@ namespace spades {
 				// Tab strip
 				{
 					Handle<SimpleTabStrip> tabStrip = Handle<SimpleTabStrip>::New(manager);
-					tabStrip->SetBounds(AABB2(contentsLeft, tabStripPos, contentsWidth, 24.0F));
+					tabStrip->SetBounds(AABB2(contentsLeft, tabStripPos, contentsWidth, tabStripHeight));
 					AddChild(tabStrip.GetPointerOrNull());
 					tabStrip->AddItem(_Tr("MainScreen", "Servidores"), serverPanel);
 					tabStrip->AddItem(_Tr("MainScreen", "Mundos"), worldsPanel);
@@ -889,7 +927,7 @@ namespace spades {
 				    Handle<MenuIconButton>::New(manager, GuiIconType::Lobby);
 				button->caption = _Tr("MainScreen", "Lobby");
 				button->hotKeyText = _Tr("Client", "[Esc]");
-				button->SetBounds(AABB2(contentsLeft, footerPos, 110.0F, 30.0F));
+				button->SetBounds(AABB2(contentsLeft, footerPos, footerBtnW, footerBtnH));
 				button->activated = [this](UIElement&) { ReturnToLobby(); };
 				AddChild(button.GetPointerOrNull());
 			}
@@ -898,7 +936,7 @@ namespace spades {
 				    Handle<MenuIconButton>::New(manager, GuiIconType::Skin);
 				skinsButton = button.GetPointerOrNull();
 				skinsButton->caption = _Tr("MainScreen", "Skins");
-				skinsButton->SetBounds(AABB2(contentsLeft + 115.0F, footerPos, 110.0F, 30.0F));
+				skinsButton->SetBounds(AABB2(contentsLeft + footerBtnW + 8.0F, footerPos, footerBtnW, footerBtnH));
 				skinsButton->activated = [this](UIElement& s) { OnSkinsPressed(s); };
 				AddChild(skinsButton);
 			}
@@ -1246,6 +1284,7 @@ namespace spades {
 		}
 
 		void MainScreenMainMenu::ServerListItemActivated(MainScreenServerItem& item) {
+			bool alreadySelected = (addressField && addressField->GetText() == item.GetAddress());
 			addressField->SetText(item.GetAddress());
 			cg_lastQuickConnectHost = addressField->GetText();
 			selectedMapName = item.GetMapName();
@@ -1258,6 +1297,16 @@ namespace spades {
 				SetProtocolVersion(11);
 			}
 			addressField->SelectAll();
+
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if (connectButton) {
+				connectButton->visible = true;
+			}
+			// If tapping an already highlighted server row, connect immediately!
+			if (alreadySelected) {
+				Connect();
+			}
+#endif
 		}
 
 		void MainScreenMainMenu::ServerListItemDoubleClicked(MainScreenServerItem& item) {
@@ -1589,8 +1638,13 @@ namespace spades {
 		void MainScreenMainMenu::UpdateDirectConnectVisibility() {
 			if (addressField)
 				addressField->visible = showDirectConnect;
+#if defined(__ANDROID__) || defined(ANDROID) || defined(ZEROSPADES_MOBILE)
+			if (connectButton)
+				connectButton->visible = true; // Always visible on mobile!
+#else
 			if (connectButton)
 				connectButton->visible = showDirectConnect;
+#endif
 			if (toggleIpButton)
 				toggleIpButton->toggled = showDirectConnect;
 			if (goldNoticeLabel)
